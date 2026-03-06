@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "AI-powered analysis of 10-K filings and financial reports",
 };
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default function RootLayout({
   children,

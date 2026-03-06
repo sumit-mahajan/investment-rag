@@ -7,9 +7,9 @@ import { Progress } from "@/components/ui/progress";
 
 interface AnalysisResultsProps {
   analysis: {
-    verdict?: string;
-    confidenceScore?: string;
-    summary?: string;
+    verdict?: string | null;
+    confidenceScore?: string | null;
+    summary?: string | null;
     results?: Array<{
       criterionName: string;
       score: number;

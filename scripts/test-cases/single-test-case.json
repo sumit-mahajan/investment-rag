@@ -1,0 +1,12 @@
+{
+  "question": "What was Apple's total revenue in Q1 FY2024?",
+  "answer": "Apple Inc. reported total revenue of $119.6 billion for the first quarter of fiscal year 2024, which ended on December 30, 2023. This represents a 2% increase compared to the same quarter in the previous year. The revenue growth was primarily driven by strong iPhone sales, which contributed $69.7 billion to the total revenue.",
+  "contexts": [
+    "Apple Inc. today announced financial results for its fiscal 2024 first quarter ended December 30, 2023. The Company posted quarterly revenue of $119.6 billion, up 2 percent year over year, and quarterly earnings per diluted share of $2.18, up 16 percent year over year.",
+    "iPhone revenue for Q1 FY2024 was $69.7 billion, representing the largest contributor to Apple's overall revenue. The Services category reached an all-time revenue record of $23.1 billion during the quarter.",
+    "Apple's revenue by product category in Q1 FY2024: iPhone ($69.7B), Services ($23.1B), Wearables/Home/Accessories ($12.0B), Mac ($7.8B), and iPad ($7.0B). The company also returned nearly $27 billion to shareholders during the quarter through dividends and share repurchases.",
+    "The company's gross margin was 45.9 percent compared to 42.8 percent in the year-ago quarter. Operating margin improved to 33.0 percent compared to 30.3 percent in Q1 FY2023.",
+    "Apple CFO Luca Maestri noted that the company generated operating cash flow of $40.8 billion during the December quarter, setting a new all-time record."
+  ],
+  "ground_truth": "Apple reported total revenue of $119.6 billion in Q1 FY2024, up 2% year-over-year from the same quarter in fiscal year 2023."
+}

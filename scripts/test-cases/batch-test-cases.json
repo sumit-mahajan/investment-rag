@@ -1,0 +1,61 @@
+[
+  {
+    "question": "What was Microsoft's Intelligent Cloud revenue in Q2 FY2024?",
+    "answer": "Microsoft's Intelligent Cloud segment generated $25.9 billion in revenue during the second quarter of fiscal year 2024. Azure and other cloud services revenue grew 30% year-over-year, driven by strong adoption of AI services and enterprise cloud migration.",
+    "contexts": [
+      "Microsoft Corp. reported Intelligent Cloud revenue of $25.9 billion in Q2 FY2024, representing a 20% increase year-over-year. This segment includes Azure, SQL Server, Windows Server, Enterprise Services, and other cloud offerings.",
+      "Azure and other cloud services revenue increased 30 percent in constant currency during the quarter. Microsoft Cloud revenue reached $33.7 billion, up 24% year-over-year.",
+      "The company's total revenue was $62.0 billion for the second quarter of fiscal year 2024, up 18% compared to the previous year. Operating income increased to $27.0 billion, up 33% year-over-year.",
+      "Microsoft Chairman and CEO Satya Nadella noted that the company is extending its AI platform leadership with new innovations announced at Microsoft Ignite. Commercial bookings increased 18% and Microsoft Cloud gross margin percentage increased year-over-year to 71%."
+    ],
+    "ground_truth": "Microsoft's Intelligent Cloud segment revenue was $25.9 billion in Q2 FY2024, up 20% year-over-year, with Azure growing 30% in constant currency."
+  },
+  {
+    "question": "What was NVIDIA's Data Center revenue in Q3 FY2024?",
+    "answer": "NVIDIA's Data Center segment achieved record revenue of $14.5 billion in Q3 FY2024, driven by exceptional demand for the company's Hopper architecture GPUs, particularly the H100. This represents a 279% increase compared to the same quarter last year and a 41% sequential increase.",
+    "contexts": [
+      "NVIDIA today reported revenue for the third quarter ended October 29, 2023, of $18.12 billion, up 206% from a year ago. Data Center revenue was $14.51 billion, up 279% from a year ago and up 41% from the previous quarter.",
+      "The surge in Data Center revenue was driven by accelerating demand for the company's Hopper GPU computing platform for large language models, recommender systems and generative AI applications. Major cloud service providers represented roughly half of Data Center revenue.",
+      "NVIDIA founder and CEO Jensen Huang stated that the era of generative AI is taking off, with strong demand across companies, industries and nations for the NVIDIA AI platform. Gaming revenue was $2.86 billion, up 15% from a year ago.",
+      "The company's gross margin expanded to 75.0% in Q3 FY2024, compared to 53.6% a year ago. Operating expenses were $2.98 billion, and operating income reached $10.42 billion.",
+      "NVIDIA returned $258 million to shareholders in the form of cash dividends during the quarter. For Q4 FY2024, the company expects revenue of approximately $20.0 billion, plus or minus 2%."
+    ],
+    "ground_truth": "NVIDIA reported Data Center revenue of $14.51 billion in Q3 FY2024, up 279% year-over-year and 41% sequentially, driven by demand for Hopper architecture GPUs for AI workloads."
+  },
+  {
+    "question": "What was Amazon's AWS revenue growth rate in Q4 2023?",
+    "answer": "Amazon Web Services (AWS) revenue grew 13% year-over-year in the fourth quarter of 2023, reaching $24.2 billion. This marked an acceleration from the previous quarter's 12% growth rate. AWS operating income was $7.2 billion with a 30% operating margin.",
+    "contexts": [
+      "Amazon Web Services net sales increased 13% year-over-year to $24.2 billion in Q4 2023. AWS operating income was $7.2 billion, compared to $5.2 billion in the fourth quarter of 2022.",
+      "AWS growth rate has been stabilizing after a period of optimization by customers in 2023. The 13% growth in Q4 represented an improvement from 12% in Q3 and 11% in Q2 of 2023.",
+      "Amazon CEO Andy Jassy noted that AWS customers continue to optimize their cloud spending but new workloads are beginning to accelerate. Generative AI is becoming an increasingly important driver of AWS growth.",
+      "Total Amazon revenue in Q4 2023 was $170.0 billion, up 14% year-over-year. North America segment sales increased 13% to $105.5 billion, while International segment sales increased 17% to $40.3 billion.",
+      "For the full year 2023, AWS annual revenue was $90.8 billion with an operating income of $24.6 billion. Amazon's total net income for 2023 was $30.4 billion, compared to a net loss of $2.7 billion in 2022."
+    ],
+    "ground_truth": "AWS revenue grew 13% year-over-year to $24.2 billion in Q4 2023, with operating income of $7.2 billion and a 30% operating margin."
+  },
+  {
+    "question": "What were Google's advertising revenue components in Q4 2023?",
+    "answer": "In Q4 2023, Google's total advertising revenue was $65.5 billion, up 11% year-over-year. This consisted of $48.0 billion from Google Search and other advertising revenue, $9.2 billion from YouTube ads, and $8.3 billion from Google Network advertising revenue.",
+    "contexts": [
+      "Alphabet Inc. today announced financial results for the quarter ended December 31, 2023. Revenues were $86.3 billion, up 13% year-over-year. Google Services revenues were $76.5 billion, driven by advertising and subscriptions.",
+      "Google advertising revenue in Q4 2023 was $65.5 billion, up 11% compared to the same quarter in 2022. Google Search and other advertising revenue was $48.0 billion, up 13% year-over-year.",
+      "YouTube advertising revenue was $9.2 billion, up 16% year-over-year, showing strong growth in both YouTube brand and direct response advertising. Google Network advertising revenue was $8.3 billion, down 5% year-over-year.",
+      "Google Cloud revenue reached $9.2 billion in Q4 2023, up 26% year-over-year. Google Cloud operating income turned positive at $864 million, compared to an operating loss of $480 million in Q4 2022.",
+      "Alphabet CEO Sundar Pichai highlighted strong momentum in Search, YouTube, and Cloud, powered by AI innovations. The company returned $15.4 billion to shareholders in Q4 through share repurchases and dividends."
+    ],
+    "ground_truth": "Google's advertising revenue in Q4 2023 totaled $65.5 billion (up 11% YoY), consisting of Google Search and other ads ($48.0B, up 13%), YouTube ads ($9.2B, up 16%), and Network ads ($8.3B, down 5%)."
+  },
+  {
+    "question": "What was Tesla's automotive gross margin in Q4 2023?",
+    "answer": "Tesla's automotive gross margin in the fourth quarter of 2023 was 17.6%, excluding regulatory credits. Including regulatory credits of $520 million, the automotive gross margin was 19.1%. This represented a decline from the 25.9% automotive gross margin reported in Q4 2022.",
+    "contexts": [
+      "Tesla announced financial results for the fourth quarter and full year ended December 31, 2023. Automotive revenue was $21.6 billion in Q4, with total revenue reaching $25.2 billion, up 3% year-over-year.",
+      "Q4 2023 automotive gross margin was 19.1%, including regulatory credit revenue of $520 million. Excluding regulatory credits, automotive gross margin was 17.6%, compared to 24.3% in Q4 2022 (excluding credits).",
+      "The decline in automotive margins was attributed to reduced average selling prices due to price reductions throughout 2023, partially offset by lower costs per vehicle. Total deliveries in 2023 reached approximately 1.81 million vehicles, up 38% year-over-year.",
+      "Operating income in Q4 2023 was $2.1 billion, with an operating margin of 8.2%. Net income was $7.9 billion, including a one-time non-cash tax benefit of $5.9 billion related to deferred tax assets.",
+      "Tesla ended 2023 with cash and cash equivalents of $29.1 billion. The company generated $4.4 billion in free cash flow during Q4 2023. Vehicle production in the quarter was approximately 495,000 units."
+    ],
+    "ground_truth": "Tesla's automotive gross margin in Q4 2023 was 19.1% (including regulatory credits) or 17.6% excluding credits, down from Q4 2022 due to price reductions."
+  }
+]

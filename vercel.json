@@ -1,0 +1,14 @@
+{
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": "nextjs",
+  "functions": {
+    "app/api/documents/upload/route.ts": {
+      "maxDuration": 60
+    },
+    "app/api/analyze/route.ts": {
+      "maxDuration": 60
+    }
+  }
+}

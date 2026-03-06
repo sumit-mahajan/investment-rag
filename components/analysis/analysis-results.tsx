@@ -7,9 +7,9 @@ import { Progress } from "@/components/ui/progress";
 
 interface AnalysisResultsProps {
   analysis: {
-    verdict?: string;
-    confidenceScore?: string;
-    summary?: string;
+    verdict?: string | null;
+    confidenceScore?: string | null;
+    summary?: string | null;
     results?: Array<{
       criterionName: string;
       score: number;
@@ -20,10 +20,10 @@ interface AnalysisResultsProps {
 
 export function AnalysisResults({ analysis }: AnalysisResultsProps) {
   const verdictColor = {
-    POSITIVE: "bg-green-100 text-green-800",
-    NEGATIVE: "bg-red-100 text-red-800",
-    NEUTRAL: "bg-gray-100 text-gray-800",
-    MIXED: "bg-yellow-100 text-yellow-800",
+    POSITIVE: "bg-emerald-500/15 text-emerald-700 border-emerald-200",
+    NEGATIVE: "bg-rose-500/15 text-rose-700 border-rose-200",
+    NEUTRAL: "bg-slate-500/15 text-slate-700 border-slate-200",
+    MIXED: "bg-amber-500/15 text-amber-700 border-amber-200",
   };
 
   return (
@@ -34,7 +34,10 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
           <div className="flex items-center justify-between">
             <CardTitle>Overall Verdict</CardTitle>
             {analysis.verdict && (
-              <Badge className={verdictColor[analysis.verdict as keyof typeof verdictColor]}>
+              <Badge
+                variant="outline"
+                className={verdictColor[analysis.verdict as keyof typeof verdictColor]}
+              >
                 {analysis.verdict}
               </Badge>
             )}

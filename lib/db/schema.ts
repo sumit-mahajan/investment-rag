@@ -54,6 +54,7 @@ export const documents = pgTable(
     status: text("status").notNull().default("pending"), // pending, processing, completed, failed
     processingError: text("processing_error"),
     totalChunks: integer("total_chunks").default(0),
+    isImageBased: boolean("is_image_based").default(false), // true when OCR was used (scanned/image-only PDF)
 
     // Timestamps
     createdAt: timestamp("created_at").defaultNow().notNull(),

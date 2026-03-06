@@ -1,9 +1,11 @@
 import pdfParse from "pdf-parse";
 import { ProcessingError } from "@/lib/utils/errors";
+import { isImageBasedPDF, extractTextFromImagePDF } from "./pdf-image-extractor";
 
 export interface ParsedPDF {
   text: string;
   numPages: number;
+  isImageBased: boolean;
   info: {
     title?: string;
     author?: string;
@@ -19,9 +21,23 @@ export async function parsePDF(buffer: Buffer): Promise<ParsedPDF> {
   try {
     const data = await pdfParse(buffer);
 
+    let text = data.text;
+    let imageBasedPDF = false;
+
+    if (isImageBasedPDF(text, data.numpages)) {
+      console.log(
+        `PDF appears image-based (${data.numpages} pages, ${text.trim().length} chars extracted). ` +
+          `Falling back to vision OCR...`
+      );
+      imageBasedPDF = true;
+      text = await extractTextFromImagePDF(buffer, data.numpages);
+      console.log(`Vision OCR extracted ${text.trim().length} chars from ${data.numpages} pages.`);
+    }
+
     return {
-      text: data.text,
+      text,
       numPages: data.numpages,
+      isImageBased: imageBasedPDF,
       info: {
         title: data.info?.Title,
         author: data.info?.Author,

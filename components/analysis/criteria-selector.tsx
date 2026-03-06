@@ -44,8 +44,8 @@ export function CriteriaSelector({ onAnalyze, isAnalyzing }: CriteriaSelectorPro
               onClick={() => toggleCriterion(criterion.id)}
               className={`p-4 border-2 rounded-lg text-left transition-colors ${
                 selectedCriteria.includes(criterion.id)
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-primary bg-primary/5"
+                  : "border-border hover:border-primary/50"
               }`}
             >
               <div className="flex items-start justify-between mb-2">

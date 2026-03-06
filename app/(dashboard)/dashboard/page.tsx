@@ -6,14 +6,13 @@ import { eq, desc } from "drizzle-orm";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
-import { FileText, TrendingUp, Clock, ChevronRight } from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
+import { DocumentUploader } from "@/components/documents/document-uploader";
+import { DocumentList } from "@/components/documents/document-list";
 
 export const dynamic = "force-dynamic";
 
@@ -29,11 +28,10 @@ export default async function DashboardPage() {
     .select()
     .from(documents)
     .where(eq(documents.userId, userId))
-    .orderBy(desc(documents.createdAt))
-    .limit(5);
+    .orderBy(desc(documents.createdAt));
 
-  // Get user's analyses with document info
-  const userAnalyses = await db
+  // Get user's recent analyses
+  const recentAnalyses = await db
     .select({
       id: analyses.id,
       verdict: analyses.verdict,
@@ -46,186 +44,107 @@ export default async function DashboardPage() {
     .innerJoin(documents, eq(analyses.documentId, documents.id))
     .where(eq(analyses.userId, userId))
     .orderBy(desc(analyses.createdAt))
-    .limit(5);
-
-  const totalAnalyses = await db
-    .select()
-    .from(analyses)
-    .where(eq(analyses.userId, userId));
+    .limit(3);
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          Welcome to your financial document analysis workspace
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Workspace</h1>
+        <p className="text-slate-600 mt-1">
+          Manage your documents and analyze financial reports
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Documents</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userDocuments.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Analyses</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalAnalyses.length}</div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Processing</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {userDocuments.filter((d) => d.status === "processing").length}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
-          <CardDescription>Start analyzing financial documents</CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-wrap gap-4">
-          <Link href="/documents">
-            <Button>Upload Document</Button>
-          </Link>
-          <Link href="/documents">
-            <Button variant="outline">View All Documents</Button>
-          </Link>
-          <Link href="/analyses">
-            <Button variant="outline">View All Analyses</Button>
-          </Link>
-        </CardContent>
-      </Card>
-
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Recent Documents */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+      {/* Main content grid */}
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Documents section - takes 2 columns */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Recent Documents</CardTitle>
-              <CardDescription>Your latest uploaded documents</CardDescription>
+              <h2 className="text-xl font-semibold text-slate-900">Documents</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Upload and manage financial reports</p>
             </div>
-            <Link href="/documents">
-              <Button variant="ghost" size="sm">
-                View all
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {userDocuments.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No documents yet. Upload your first 10-K filing to get started.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {userDocuments.map((doc) => (
-                  <Link
-                    key={doc.id}
-                    href={`/analysis/${doc.id}`}
-                    className="block p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{doc.originalName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {doc.companyName || "Unknown Company"}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm font-medium capitalize">{doc.status}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(doc.createdAt)}
-                        </p>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+          </div>
 
-        {/* Recent Analyses */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <DocumentUploader />
+
+          <div className="space-y-4">
+            <h3 className="text-sm font-medium text-slate-700 uppercase tracking-wide">
+              Your Documents ({userDocuments.length})
+            </h3>
+            <DocumentList documents={userDocuments as any} />
+          </div>
+        </div>
+
+        {/* Sidebar - Recent analyses */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Recent Analyses</CardTitle>
-              <CardDescription>Your latest analysis results</CardDescription>
+              <h2 className="text-xl font-semibold text-slate-900">Recent Analyses</h2>
+              <p className="text-sm text-slate-600 mt-0.5">Latest results</p>
             </div>
-            <Link href="/analyses">
-              <Button variant="ghost" size="sm">
-                View all
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </Button>
-            </Link>
-          </CardHeader>
-          <CardContent>
-            {userAnalyses.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No analyses yet. Run an analysis on a document to get started.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {userAnalyses.map((a) => (
-                  <Link
-                    key={a.id}
-                    href={`/analyses/${a.id}`}
-                    className="block p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors"
-                  >
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">{a.documentName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {a.companyName || "Document"}
-                        </p>
-                      </div>
-                      <div className="text-right flex items-center gap-2">
-                        {a.verdict && (
+          </div>
+
+          {recentAnalyses.length === 0 ? (
+            <Card className="border-2 border-dashed border-slate-200 bg-white">
+              <CardContent className="flex flex-col items-center justify-center py-12">
+                <div className="p-3 rounded-full bg-slate-100 mb-3">
+                  <BarChart3 className="w-6 h-6 text-slate-400" />
+                </div>
+                <p className="text-sm font-medium text-slate-900 mb-1">No analyses yet</p>
+                <p className="text-xs text-slate-500 text-center max-w-[200px]">
+                  Upload a document and run an analysis to get started
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {recentAnalyses.map((analysis) => (
+                <Link
+                  key={analysis.id}
+                  href={`/analyses/${analysis.id}`}
+                  className="block group"
+                >
+                  <Card className="border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                            {analysis.companyName || analysis.documentName}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {formatDate(analysis.createdAt)}
+                          </p>
+                        </div>
+                        {analysis.verdict && (
                           <span
-                            className={`text-xs font-medium px-2 py-0.5 rounded ${
-                              a.verdict === "POSITIVE"
-                                ? "bg-emerald-500/15 text-emerald-700"
-                                : a.verdict === "NEGATIVE"
-                                  ? "bg-rose-500/15 text-rose-700"
-                                  : a.verdict === "MIXED"
-                                    ? "bg-amber-500/15 text-amber-700"
-                                    : "bg-slate-500/15 text-slate-700"
+                            className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                              analysis.verdict === "POSITIVE"
+                                ? "bg-emerald-100 text-emerald-700"
+                                : analysis.verdict === "NEGATIVE"
+                                  ? "bg-rose-100 text-rose-700"
+                                  : analysis.verdict === "MIXED"
+                                    ? "bg-amber-100 text-amber-700"
+                                    : "bg-slate-100 text-slate-700"
                             }`}
                           >
-                            {a.verdict}
+                            {analysis.verdict}
                           </span>
                         )}
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(a.createdAt)}
-                        </p>
                       </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
+              ))}
+              <Link href="/analyses">
+                <Button variant="outline" className="w-full" size="sm">
+                  View All Analyses
+                </Button>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

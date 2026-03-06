@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { analysisCriteria } from "@/config/criteria.config";
+import { CheckCircle2, Circle, Play } from "lucide-react";
 
 interface CriteriaSelectorProps {
   onAnalyze: (criteriaIds: string[]) => void;
@@ -31,43 +31,69 @@ export function CriteriaSelector({ onAnalyze, isAnalyzing }: CriteriaSelectorPro
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Select Analysis Criteria</CardTitle>
-        <CardDescription>Choose which aspects of the financial document to analyze</CardDescription>
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardHeader className="pb-4">
+        <CardTitle className="text-lg text-slate-900">Select Analysis Criteria</CardTitle>
+        <p className="text-sm text-slate-600 mt-1">
+          Choose which aspects of the financial document to analyze
+        </p>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid md:grid-cols-2 gap-4">
-          {Object.values(analysisCriteria).map((criterion) => (
-            <button
-              key={criterion.id}
-              onClick={() => toggleCriterion(criterion.id)}
-              className={`p-4 border-2 rounded-lg text-left transition-colors ${
-                selectedCriteria.includes(criterion.id)
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
-            >
-              <div className="flex items-start justify-between mb-2">
-                <h3 className="font-semibold">{criterion.name}</h3>
-                {selectedCriteria.includes(criterion.id) && (
-                  <Badge variant="default">Selected</Badge>
-                )}
-              </div>
-              <p className="text-sm text-muted-foreground">{criterion.description}</p>
-            </button>
-          ))}
+      <CardContent className="space-y-6">
+        <div className="grid md:grid-cols-2 gap-3">
+          {Object.values(analysisCriteria).map((criterion) => {
+            const isSelected = selectedCriteria.includes(criterion.id);
+            
+            return (
+              <button
+                key={criterion.id}
+                onClick={() => toggleCriterion(criterion.id)}
+                className={`group p-4 rounded-xl text-left transition-all ${
+                  isSelected
+                    ? "border-2 border-blue-200 bg-blue-50 shadow-sm"
+                    : "border-2 border-slate-200 bg-white hover:border-blue-200 hover:bg-blue-50/50"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    {isSelected ? (
+                      <CheckCircle2 className="w-5 h-5 text-blue-600" />
+                    ) : (
+                      <Circle className="w-5 h-5 text-slate-400 group-hover:text-blue-600 transition-colors" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className={`font-semibold mb-1 ${
+                      isSelected ? "text-blue-900" : "text-slate-900"
+                    }`}>
+                      {criterion.name}
+                    </h3>
+                    <p className={`text-sm ${
+                      isSelected ? "text-blue-700" : "text-slate-600"
+                    }`}>
+                      {criterion.description}
+                    </p>
+                  </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
 
-        <div className="pt-4 border-t">
+        <div className="pt-4 border-t border-slate-200">
           <Button
             onClick={handleAnalyze}
             disabled={selectedCriteria.length === 0 || isAnalyzing}
-            className="w-full"
+            className="w-full bg-blue-600 hover:bg-blue-700 h-12 text-base font-medium"
             size="lg"
           >
-            {isAnalyzing ? "Analyzing..." : `Analyze (${selectedCriteria.length} criteria)`}
+            <Play className="w-4 h-4 mr-2" />
+            {isAnalyzing ? "Analyzing..." : `Run Analysis (${selectedCriteria.length} criteria)`}
           </Button>
+          {selectedCriteria.length === 0 && (
+            <p className="text-xs text-slate-500 text-center mt-2">
+              Select at least one criterion to continue
+            </p>
+          )}
         </div>
       </CardContent>
     </Card>

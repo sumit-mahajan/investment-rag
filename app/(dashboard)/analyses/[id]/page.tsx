@@ -7,7 +7,7 @@ import { AnalysisResults } from "@/components/analysis/analysis-results";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
-import { ArrowLeft, FileText, Loader2 } from "lucide-react";
+import { ArrowLeft, FileText, Loader2, Play } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -62,38 +62,40 @@ export default async function AnalysisDetailPage({
     results,
   };
 
-  const verdictStyles: Record<string, string> = {
-    POSITIVE: "bg-emerald-500/15 text-emerald-700 border-emerald-200",
-    NEGATIVE: "bg-rose-500/15 text-rose-700 border-rose-200",
-    NEUTRAL: "bg-slate-500/15 text-slate-700 border-slate-200",
-    MIXED: "bg-amber-500/15 text-amber-700 border-amber-200",
+  const verdictStyles: Record<string, { bg: string; text: string }> = {
+    POSITIVE: { bg: "bg-emerald-100", text: "text-emerald-700" },
+    NEGATIVE: { bg: "bg-rose-100", text: "text-rose-700" },
+    NEUTRAL: { bg: "bg-slate-100", text: "text-slate-700" },
+    MIXED: { bg: "bg-amber-100", text: "text-amber-700" },
   };
 
   if (analysis.status === "running" || analysis.status === "pending") {
     return (
-      <div className="space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center gap-4">
           <Link href="/analyses">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">
-              {document?.originalName ?? "Analysis"}
+            <h1 className="text-2xl font-bold text-slate-900">
+              {document?.companyName || document?.originalName || "Analysis"}
             </h1>
-            <p className="text-muted-foreground text-sm">
-              {document?.companyName ?? "Document"}
+            <p className="text-slate-600 text-sm mt-0.5">
+              Analysis in progress
             </p>
           </div>
         </div>
 
-        <Card className="border-2 border-dashed border-muted">
+        <Card className="border-2 border-dashed border-blue-200 bg-blue-50/50">
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-            <p className="font-medium">Analysis in progress</p>
-            <p className="text-sm text-muted-foreground mt-2">
-              This may take a few minutes. Check back shortly.
+            <div className="p-4 rounded-full bg-blue-100 mb-4">
+              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            </div>
+            <p className="font-semibold text-slate-900 mb-2">Analyzing document...</p>
+            <p className="text-sm text-slate-600 text-center max-w-md">
+              This may take a few minutes. We're analyzing the document against your selected criteria.
             </p>
             <Link href="/analyses" className="mt-6">
               <Button variant="outline">Back to Analyses</Button>
@@ -106,33 +108,36 @@ export default async function AnalysisDetailPage({
 
   if (analysis.status === "failed") {
     return (
-      <div className="space-y-8">
+      <div className="max-w-4xl mx-auto space-y-8">
         <div className="flex items-center gap-4">
           <Link href="/analyses">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="shrink-0">
               <ArrowLeft className="w-4 h-4" />
             </Button>
           </Link>
           <div>
-            <h1 className="text-2xl font-bold">
-              {document?.originalName ?? "Analysis"}
+            <h1 className="text-2xl font-bold text-slate-900">
+              {document?.companyName || document?.originalName || "Analysis"}
             </h1>
-            <p className="text-muted-foreground text-sm">
-              {document?.companyName ?? "Document"}
+            <p className="text-slate-600 text-sm mt-0.5">
+              Analysis failed
             </p>
           </div>
         </div>
 
-        <Card className="border-destructive/50">
+        <Card className="border-rose-200 bg-rose-50/50">
           <CardContent className="py-12">
             <div className="text-center">
-              <Badge variant="destructive" className="mb-4">
+              <Badge className="bg-rose-100 text-rose-700 mb-4">
                 Failed
               </Badge>
-              <p className="text-muted-foreground">{analysis.error ?? "Analysis failed"}</p>
+              <p className="text-slate-600">{analysis.error ?? "Analysis failed"}</p>
               <div className="flex gap-4 justify-center mt-6">
                 <Link href={`/analysis/${document?.id}`}>
-                  <Button>Run New Analysis</Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700">
+                    <Play className="w-4 h-4 mr-2" />
+                    Run New Analysis
+                  </Button>
                 </Link>
                 <Link href="/analyses">
                   <Button variant="outline">Back to Analyses</Button>
@@ -145,43 +150,43 @@ export default async function AnalysisDetailPage({
     );
   }
 
+  const verdictStyle = analysis.verdict ? verdictStyles[analysis.verdict] : null;
+
   return (
-    <div className="space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4">
-          <Link href="/analyses">
-            <Button variant="ghost" size="icon" className="shrink-0">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <div className="flex items-center gap-3 flex-wrap">
-              <h1 className="text-2xl font-bold tracking-tight">
-                {document?.originalName ?? "Analysis"}
-              </h1>
-              {analysis.verdict && (
-                <Badge
-                  variant="outline"
-                  className={verdictStyles[analysis.verdict] ?? ""}
-                >
-                  {analysis.verdict}
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-4 mt-1.5 text-sm text-muted-foreground">
-              {document?.companyName && (
-                <span className="flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" />
-                  {document.companyName}
-                </span>
-              )}
-              <span>{formatDateTime(analysis.completedAt ?? analysis.updatedAt)}</span>
-            </div>
+      <div className="flex items-start gap-4">
+        <Link href="/analyses">
+          <Button variant="ghost" size="icon" className="shrink-0">
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
+        </Link>
+        <div className="flex-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              {document?.companyName || document?.originalName || "Analysis"}
+            </h1>
+            {analysis.verdict && verdictStyle && (
+              <Badge className={`${verdictStyle.bg} ${verdictStyle.text} border-0`}>
+                {analysis.verdict}
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-4 mt-1.5 text-sm text-slate-500">
+            {document?.companyName && document?.originalName && (
+              <span className="flex items-center gap-1.5">
+                <FileText className="w-4 h-4" />
+                {document.originalName}
+              </span>
+            )}
+            <span>{formatDateTime(analysis.completedAt ?? analysis.updatedAt)}</span>
           </div>
         </div>
         <Link href={`/analysis/${document?.id}`}>
-          <Button variant="outline">Run New Analysis</Button>
+          <Button variant="outline" className="shrink-0">
+            <Play className="w-4 h-4 mr-2" />
+            New Analysis
+          </Button>
         </Link>
       </div>
 

@@ -34,25 +34,15 @@ export default async function AnalysesPage() {
     .orderBy(desc(analyses.createdAt));
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2.5">
-            <BarChart3 className="w-6 h-6 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Analyses</h1>
-            <p className="text-muted-foreground mt-0.5">
-              View and explore your document analysis results
-            </p>
-          </div>
-        </div>
+    <div className="max-w-5xl mx-auto space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Analyses</h1>
+        <p className="text-slate-600 mt-1">
+          View and explore your document analysis results
+        </p>
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold mb-4">Your Analyses</h2>
-        <AnalysisList analyses={userAnalyses as any} />
-      </div>
+      <AnalysisList analyses={userAnalyses as any} />
     </div>
   );
 }

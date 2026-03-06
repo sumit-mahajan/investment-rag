@@ -146,6 +146,7 @@ export async function processDocument(input: ProcessDocumentInput): Promise<void
         status: "completed",
         totalChunks: nonEmptyChunks.length,
         processedAt: new Date(),
+        isImageBased: parsed.isImageBased,
       })
       .where(eq(documents.id, documentId));
 

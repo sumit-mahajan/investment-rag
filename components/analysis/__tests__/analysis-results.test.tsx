@@ -208,4 +208,38 @@ describe("AnalysisResults", () => {
     const badge = screen.getByText("30%");
     expect(badge).toHaveClass("text-rose-700");
   });
+
+  it("renders investment philosophy cards when philosophies provided", () => {
+    const analysisWithPhilosophies = {
+      ...mockAnalysis,
+      philosophies: [
+        {
+          philosophyId: "value-investing",
+          philosophyName: "Value Investing",
+          verdict: "POSITIVE",
+          confidenceScore: 0.75,
+          metricsFound: ["P/E ratio: 12.5", "dividend yield: 2.5%"],
+          metricsNotFound: ["P/B ratio", "price-to-free-cash-flow"],
+          findings: "Company shows value characteristics with reasonable P/E.",
+        },
+        {
+          philosophyId: "growth-investing",
+          philosophyName: "Growth Investing",
+          verdict: "MIXED",
+          confidenceScore: 0.4,
+          metricsFound: [],
+          metricsNotFound: ["revenue growth", "R&D spending"],
+          findings: "Insufficient metrics found in document.",
+        },
+      ],
+    };
+
+    render(<AnalysisResults analysis={analysisWithPhilosophies} />);
+
+    expect(screen.getByText("Investment Philosophy Fit")).toBeInTheDocument();
+    expect(screen.getByText("Value Investing")).toBeInTheDocument();
+    expect(screen.getByText("Growth Investing")).toBeInTheDocument();
+    expect(screen.getByText(/P\/E ratio: 12.5/)).toBeInTheDocument();
+    expect(screen.getByText(/No key metrics found in document/)).toBeInTheDocument();
+  });
 });

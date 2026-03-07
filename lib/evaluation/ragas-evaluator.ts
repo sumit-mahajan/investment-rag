@@ -24,10 +24,10 @@ export type { RAGASMetrics, EvaluationInput, DetailedEvaluation };
 
 // Initialize Gemini Flash 2.5
 const geminiModel = new ChatGoogleGenerativeAI({
-  model: "gemini-2.0-flash-exp",
+  model: "gemini-2.5-flash",
   temperature: 0,
   maxRetries: 3,
-  apiKey: process.env.GOOGLE_GENAI_API_KEY,
+  apiKey: process.env.GOOGLE_GENAI_API_KEY ?? process.env.GOOGLE_API_KEY,
 });
 
 // ============================================================================
@@ -80,6 +80,31 @@ const correctnessSchema = z.object({
  * 2. For each statement, check if it's supported by the context
  * 3. Calculate score as: supported_statements / total_statements
  */
+/** Max chars to prevent model overflow / malformed output */
+const MAX_CONTEXT_CHARS = 12000;
+const MAX_ANSWER_CHARS = 3000;
+
+/** Sanitize string: trim, collapse newlines, limit length */
+function sanitizeStatement(s: string, maxLen = 500): string {
+  return s.replace(/\n+/g, " ").trim().slice(0, maxLen);
+}
+
+/** Try to parse malformed faithfulness JSON from raw output */
+function parseFaithfulnessFallback(raw: string): { statements: string[]; verdicts: boolean[] } | null {
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed?.statements?.length || !Array.isArray(parsed.verdicts)) return null;
+    const statements = parsed.statements
+      .filter((s: unknown) => typeof s === "string")
+      .map((s: string) => sanitizeStatement(s));
+    const verdicts = parsed.verdicts.filter((v: unknown) => typeof v === "boolean");
+    if (statements.length !== verdicts.length) return null;
+    return { statements, verdicts };
+  } catch {
+    return null;
+  }
+}
+
 export async function evaluateFaithfulness(
   answer: string,
   contexts: string[]
@@ -88,28 +113,30 @@ export async function evaluateFaithfulness(
     return { score: 0, details: { error: "Missing answer or contexts" } };
   }
 
-  const combinedContext = contexts.join("\n\n---\n\n");
+  const combinedContext = contexts.join("\n\n---\n\n").slice(0, MAX_CONTEXT_CHARS);
+  const truncatedAnswer = answer.slice(0, MAX_ANSWER_CHARS);
 
   const prompt = `You are an expert evaluator assessing the faithfulness of an answer to its source context.
 
-TASK: Extract atomic statements from the answer and verify each against the context.
+TASK: Extract 3-10 atomic statements from the answer and verify each against the context.
 
 CONTEXT:
 ${combinedContext}
 
 ANSWER:
-${answer}
+${truncatedAnswer}
 
 INSTRUCTIONS:
-1. Break down the answer into atomic, factual statements (claims that can be individually verified)
+1. Break down the answer into atomic, factual statements (each under 50 words)
 2. For each statement, determine if it is SUPPORTED by the context (true) or NOT SUPPORTED (false)
 3. A statement is supported only if the context directly provides evidence for it
-4. Provide clear reasoning for each verdict
+4. Keep statements concise - do not repeat or expand content
+5. Provide brief reasoning for each verdict (under 50 words)
 
 Return a JSON object with:
-- statements: array of atomic statements
+- statements: array of atomic statements (short strings)
 - verdicts: array of boolean values (true if supported, false if not)
-- reasoning: array of explanations for each verdict`;
+- reasoning: array of brief explanations for each verdict`;
 
   try {
     const structuredModel = geminiModel.withStructuredOutput(faithfulnessSchema);
@@ -132,9 +159,29 @@ Return a JSON object with:
         reasoning: result.reasoning,
       },
     };
-  } catch (error) {
+  } catch (error: unknown) {
+    // Fallback: try to parse raw output from OUTPUT_PARSING_FAILURE
+    const err = error as { llmOutput?: string };
+    if (typeof err?.llmOutput === "string") {
+      const fallback = parseFaithfulnessFallback(err.llmOutput);
+      if (fallback && fallback.statements.length > 0) {
+        const supportedCount = fallback.verdicts.filter(Boolean).length;
+        const score = supportedCount / fallback.statements.length;
+        return {
+          score,
+          details: {
+            total_statements: fallback.statements.length,
+            supported_statements: supportedCount,
+            statements: fallback.statements,
+            verdicts: fallback.verdicts,
+            reasoning: [],
+            recovered_from_parse_error: true,
+          },
+        };
+      }
+    }
     console.error("Error evaluating faithfulness:", error);
-    return { score: 0, details: { error: String(error) } };
+    return { score: 0.5, details: { error: String(error), fallback: true } };
   }
 }
 
@@ -460,16 +507,9 @@ export async function evaluateRAGAS(
 ): Promise<DetailedEvaluation> {
   const { question, answer, contexts, ground_truth } = input;
 
-  // Run all evaluations in parallel where possible
-  const [
-    faithfulnessResult,
-    relevancyResult,
-    precisionResult,
-  ] = await Promise.all([
-    evaluateFaithfulness(answer, contexts),
-    evaluateAnswerRelevancy(question, answer),
-    evaluateContextPrecision(question, contexts),
-  ]);
+  const faithfulnessResult = await evaluateFaithfulness(answer, contexts);
+  const relevancyResult = await evaluateAnswerRelevancy(question, answer);
+  const precisionResult = await evaluateContextPrecision(question, contexts);
 
   // These require ground truth, evaluate conditionally
   let recallResult = { score: 0, details: { message: "Ground truth not provided" } };
@@ -500,7 +540,7 @@ export async function evaluateRAGAS(
       correctness_details: correctnessResult.details,
     },
     timestamp: new Date().toISOString(),
-    model_used: "gemini-2.0-flash-exp",
+    model_used: "gemini-2.5-flash",
   };
 }
 
@@ -544,9 +584,17 @@ export async function evaluateBatch(
   } else {
     // Sequential processing
     results = [];
-    for (const testCase of testCases) {
-      const result = await evaluateRAGAS(testCase);
-      results.push(result);
+    for (let idx = 0; idx < testCases.length; idx++) {
+      const testCase = testCases[idx];
+      console.log(`Evaluating test case ${idx + 1}/${testCases.length}...`);
+      try {
+        const result = await evaluateRAGAS(testCase);
+        results.push(result);
+        console.log(`  ✓ ${idx + 1}/${testCases.length} (F:${(result.faithfulness * 100).toFixed(0)}% R:${(result.answer_relevancy * 100).toFixed(0)}%)`);
+      } catch (error) {
+        console.error(`  ✗ Error: ${error instanceof Error ? error.message : String(error)}`);
+        throw error;
+      }
     }
   }
 

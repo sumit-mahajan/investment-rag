@@ -8,6 +8,8 @@ export interface RetrievalOptions extends SearchOptions {
   useExpansion?: boolean;
   useReranking?: boolean;
   useDiversity?: boolean;
+  /** Override config: keep fewer chunks after reranking for higher precision */
+  rerankTopK?: number;
 }
 
 export async function retrieveRelevantChunks(
@@ -19,6 +21,7 @@ export async function retrieveRelevantChunks(
     useReranking = ragConfig.retrieval.useReranking,
     useDiversity = true,
     topK = ragConfig.retrieval.topK,
+    rerankTopK = ragConfig.retrieval.rerankTopK,
   } = options;
 
   let queries = [query];
@@ -56,13 +59,9 @@ export async function retrieveRelevantChunks(
 
   // Rerank using Cohere (if enabled)
   if (useReranking) {
-    finalResults = await rerankResults(
-      query,
-      finalResults,
-      ragConfig.retrieval.rerankTopK
-    );
+    finalResults = await rerankResults(query, finalResults, rerankTopK);
   } else {
-    finalResults = finalResults.slice(0, ragConfig.retrieval.rerankTopK);
+    finalResults = finalResults.slice(0, rerankTopK);
   }
 
   // Filter by minimum similarity score

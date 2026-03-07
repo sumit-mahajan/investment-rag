@@ -1,8 +1,15 @@
 import { StateGraph } from "@langchain/langgraph";
-import { CriteriaConfig, CriterionAnalysis, ChunkEvidence, Verdict } from "@/lib/types/analysis";
+import {
+  CriteriaConfig,
+  CriterionAnalysis,
+  ChunkEvidence,
+  Verdict,
+  PhilosophyAnalysis,
+} from "@/lib/types/analysis";
 import { HybridSearchResult } from "@/lib/types/rag";
 import { retrieveNode } from "./nodes/retrieve";
 import { analyzeNode } from "./nodes/analyze";
+import { philosophiesNode } from "./nodes/philosophies";
 import { synthesizeNode } from "./nodes/synthesize";
 
 export interface AnalysisState {
@@ -11,6 +18,7 @@ export interface AnalysisState {
   criteria: CriteriaConfig[];
   retrievedChunks: HybridSearchResult[];
   analyses: CriterionAnalysis[];
+  philosophyAnalyses?: PhilosophyAnalysis[];
   verdict?: Verdict;
   confidenceScore?: number;
   summary?: string;
@@ -25,6 +33,7 @@ export function createFinancialAnalyzerGraph() {
       criteria: null,
       retrievedChunks: null,
       analyses: null,
+      philosophyAnalyses: null,
       verdict: null,
       confidenceScore: null,
       summary: null,
@@ -35,12 +44,14 @@ export function createFinancialAnalyzerGraph() {
   // Add nodes
   workflow.addNode("retrieve", retrieveNode);
   workflow.addNode("analyze", analyzeNode);
+  workflow.addNode("philosophies", philosophiesNode);
   workflow.addNode("synthesize", synthesizeNode);
 
-  // Add edges
+  // Add edges: retrieve -> analyze -> philosophies -> synthesize
   (workflow as any).addEdge("__start__", "retrieve");
   (workflow as any).addEdge("retrieve", "analyze");
-  (workflow as any).addEdge("analyze", "synthesize");
+  (workflow as any).addEdge("analyze", "philosophies");
+  (workflow as any).addEdge("philosophies", "synthesize");
   (workflow as any).addEdge("synthesize", "__end__");
 
   return workflow.compile();

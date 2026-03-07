@@ -61,3 +61,15 @@ export interface AnalysisResponse {
   status: AnalysisStatus;
   message?: string;
 }
+
+/** Result of analyzing one investment philosophy (value or growth) */
+export interface PhilosophyAnalysis {
+  philosophyId: string;
+  philosophyName: string;
+  verdict: Verdict;
+  confidenceScore: number;
+  metricsFound: string[];
+  metricsNotFound: string[];
+  findings: string;
+  evidence: ChunkEvidence[];
+}

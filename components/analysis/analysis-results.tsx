@@ -3,7 +3,17 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, AlertTriangle, TrendingUp, Shield, Target, Users, Scale, BarChart3 } from "lucide-react";
+import { CheckCircle2, AlertTriangle, TrendingUp, Shield, Target, Users, Scale, BarChart3, Coins, Sparkles } from "lucide-react";
+
+interface PhilosophyResult {
+  philosophyId: string;
+  philosophyName: string;
+  verdict: string;
+  confidenceScore: number;
+  metricsFound: string[];
+  metricsNotFound: string[];
+  findings: string;
+}
 
 interface AnalysisResultsProps {
   analysis: {
@@ -15,6 +25,7 @@ interface AnalysisResultsProps {
       score: number;
       findings: string;
     }>;
+    philosophies?: PhilosophyResult[];
   };
 }
 
@@ -25,6 +36,11 @@ const criterionIcons: Record<string, any> = {
   "Competitive Position": Target,
   "Management Quality": Users,
   "Regulatory Compliance": Scale,
+};
+
+const philosophyIcons: Record<string, any> = {
+  "Value Investing": Coins,
+  "Growth Investing": Sparkles,
 };
 
 const getScoreColor = (score: number) => {
@@ -75,6 +91,86 @@ export function AnalysisResults({ analysis }: AnalysisResultsProps) {
           <p className="text-sm leading-relaxed text-slate-700">{analysis.summary}</p>
         </CardContent>
       </Card>
+
+      {/* Investment Philosophy Analysis (Value & Growth) */}
+      {analysis.philosophies && analysis.philosophies.length > 0 && (
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-slate-900">Investment Philosophy Fit</h2>
+          <p className="text-sm text-slate-600">
+            Analysis from value and growth investing perspectives. Metrics are extracted from the document when available.
+          </p>
+          <div className="grid gap-4 md:grid-cols-2">
+            {analysis.philosophies.map((phil) => {
+              const verdictStyles: Record<string, { bg: string; text: string }> = {
+                POSITIVE: { bg: "bg-emerald-100", text: "text-emerald-700" },
+                NEGATIVE: { bg: "bg-rose-100", text: "text-rose-700" },
+                NEUTRAL: { bg: "bg-slate-100", text: "text-slate-700" },
+                MIXED: { bg: "bg-amber-100", text: "text-amber-700" },
+              };
+              const vs = phil.verdict ? verdictStyles[phil.verdict] ?? verdictStyles.NEUTRAL : verdictStyles.NEUTRAL;
+              const Icon = philosophyIcons[phil.philosophyName] ?? BarChart3;
+              const hasMetrics = phil.metricsFound.length > 0;
+              return (
+                <Card
+                  key={phil.philosophyId}
+                  className="border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                >
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="p-2 rounded-lg bg-slate-100 shrink-0">
+                            <Icon className="w-5 h-5 text-slate-600" />
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-slate-900">{phil.philosophyName}</h3>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          <Badge className={`${vs.bg} ${vs.text} border-0 text-sm font-semibold px-3 py-1`}>
+                            {phil.verdict}
+                          </Badge>
+                          <span className="text-xs text-slate-500">
+                            Confidence: {(phil.confidenceScore * 100).toFixed(0)}%
+                          </span>
+                        </div>
+                      </div>
+                      {hasMetrics ? (
+                        <div className="space-y-2">
+                          <p className="text-xs font-medium text-slate-600">Metrics found</p>
+                          <ul className="text-sm text-slate-700 space-y-1">
+                            {phil.metricsFound.map((m, i) => (
+                              <li key={i} className="flex items-start gap-1.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0 mt-0.5" />
+                                {m}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-md">
+                          No key metrics found in document. Verdict based on limited information.
+                        </p>
+                      )}
+                      {phil.metricsNotFound.length > 0 && (
+                        <div className="space-y-1">
+                          <p className="text-xs font-medium text-slate-500">Not found</p>
+                          <p className="text-xs text-slate-500">{phil.metricsNotFound.join(", ")}</p>
+                        </div>
+                      )}
+                      <div className="pt-2 border-t border-slate-100">
+                        <p className="text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
+                          {phil.findings}
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Detailed Results */}
       {analysis.results && analysis.results.length > 0 && (

@@ -4,6 +4,8 @@ Production-grade RAG evaluation using Gemini Flash 2.5 and RAGAS metrics.
 
 ## Quick Start
 
+npx tsx scripts/evaluate-rag.ts --langsmith --limit 100 --parallel
+
 ```bash
 # Set API key
 export GOOGLE_GENAI_API_KEY="your-gemini-api-key"
@@ -73,6 +75,10 @@ npx tsx scripts/evaluate-rag.ts \
   --parallel \
   --output results.json
 
+# Batch from LangSmith traces (data captured from your running app)
+npx tsx scripts/evaluate-rag.ts --langsmith --parallel --output results.json
+npx tsx scripts/evaluate-rag.ts --langsmith --project investment-rag --limit 50 --hours 24
+
 # With quality gates (exits 1 if fails)
 npx tsx scripts/evaluate-rag.ts \
   --file test-cases.json \
@@ -114,6 +120,66 @@ All scores are 0-1 (higher is better):
 
 // Exploratory
 { faithfulness: 0.7, answer_relevancy: 0.6, context_precision: 0.6 }
+```
+
+## LangSmith Integration
+
+Run RAGAS on data captured from your running app (LangSmith traces):
+
+### Prerequisites
+
+1. Enable tracing: `LANGCHAIN_TRACING_V2=true`, `LANGCHAIN_API_KEY`, `LANGCHAIN_PROJECT`
+2. Run analyses in your app so traces are sent to LangSmith
+
+### How It Works
+
+The loader fetches **root runs** from your LangSmith project and extracts evaluation data from the financial analysis agent traces. For each criterion in a completed analysis, it maps:
+
+- **question** → criterion name + description
+- **answer** → analysis findings
+- **contexts** → retrieved chunks used as evidence
+
+### CLI
+
+```bash
+# Evaluate traces from default project (LANGCHAIN_PROJECT)
+npx tsx scripts/evaluate-rag.ts --langsmith --parallel
+
+# Specify project, limit, and time window
+npx tsx scripts/evaluate-rag.ts --langsmith --project investment-rag --limit 50 --hours 24
+
+# With output and thresholds
+npx tsx scripts/evaluate-rag.ts --langsmith --output langsmith-results.json --thresholds '{"faithfulness":0.8}'
+```
+
+### In Code
+
+```typescript
+import { loadTestCasesFromLangSmith, evaluateBatch } from "@/lib/evaluation";
+
+const testCases = await loadTestCasesFromLangSmith({
+  projectName: "investment-rag",
+  limit: 50,
+  hoursBack: 24,
+  excludeErrors: true,
+});
+
+const results = await evaluateBatch(testCases, { parallel: true, batchSize: 5 });
+console.log(results.summary);
+```
+
+### LangSmith Datasets
+
+For datasets with examples (question, optional ground_truth):
+
+```typescript
+import { loadTestCasesFromDataset } from "@/lib/evaluation";
+
+const testCases = await loadTestCasesFromDataset("rag-eval-dataset", {
+  limit: 100,
+  split: "test",
+});
+// Note: Dataset examples may not include contexts - add them when creating examples
 ```
 
 ## Integration Patterns
@@ -241,7 +307,51 @@ Each metric uses Gemini Flash 2.5 with structured outputs (Zod schemas):
 - Retries (3 attempts) for API failures
 - Rate limit detection and backoff
 - Graceful degradation (returns 0 on error)
+- Fallback parsing when structured output fails (faithfulness)
 - Detailed error logging
+
+## Interpreting Results & Developer Actions
+
+When average results look like **Faithfulness: 66.7%, Relevancy: 90.0%**:
+
+### What It Means
+
+| Metric                 | Your Score         | Interpretation                                                                                      |
+| ---------------------- | ------------------ | --------------------------------------------------------------------------------------------------- |
+| **Faithfulness 66.7%** | Below ideal (≥80%) | Some claims in answers are not grounded in retrieved context (hallucination or over-interpretation) |
+| **Relevancy 90%**      | Good               | Answers generally address the question; minor drift or extra info                                   |
+
+### Recommended Actions
+
+1. **Improve Faithfulness (priority)**
+   - **Retrieval**: Increase `topK`, enable reranking, or improve chunking so more relevant context is retrieved
+   - **Prompting**: Tighten the analysis prompt to say "only use information from the provided context; do not infer beyond it"
+   - **Post-processing**: Add a verification step that flags unsupported claims before returning to the user
+   - **Inspect failures**: Use `evaluation_details.faithfulness_details` to see which statements failed and why
+
+2. **Maintain Relevancy**
+   - 90% is solid; focus on edge cases where answers drift off-topic
+   - Add few-shot examples in the prompt for ambiguous questions
+
+3. **Set Thresholds for CI/CD**
+
+   ```typescript
+   meetsQualityThresholds(result, {
+     faithfulness: 0.75, // Minimum acceptable
+     answer_relevancy: 0.85,
+     context_precision: 0.7,
+   });
+   ```
+
+4. **Iterate**
+   - Run evaluations on LangSmith traces regularly
+   - Track metrics over time; regressions indicate prompt or retrieval changes to revert
+
+### Speed Tips
+
+- Use `--parallel` for batch evaluation (e.g. `--batch-size 5`)
+- Truncate very long contexts in your RAG pipeline before evaluation
+- Sample a subset of traces for quick checks; run full eval before releases
 
 ## API Reference
 

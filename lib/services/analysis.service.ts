@@ -194,6 +194,12 @@ export class AnalysisService {
 
         await this.criteriaRepo.createBatch(criteriaRecords, tx);
 
+        // Store results: criteria + philosophies (value & growth investing)
+        const resultsPayload = {
+          criteria: result.analyses,
+          philosophies: result.philosophyAnalyses ?? [],
+        };
+
         // Update analysis record
         await this.analysisRepo.updateResults(
           analysisId,
@@ -202,7 +208,7 @@ export class AnalysisService {
             verdict: result.verdict,
             confidenceScore: result.confidenceScore?.toString(),
             summary: result.summary,
-            results: result.analyses as any,
+            results: resultsPayload as any,
             sources: result.sources as any,
             completedAt: new Date(),
           },

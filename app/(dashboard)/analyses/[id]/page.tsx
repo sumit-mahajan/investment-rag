@@ -47,18 +47,42 @@ export default async function AnalysisDetailPage({
     document = { id: analysis.documentId, originalName: "Unknown", companyName: null };
   }
 
-  // Build results for AnalysisResults - use analysis.results if available, else map from criteria
-  const results =
-    (analysis.results as Array<{ criterionName: string; score: number; findings: string }>) ??
-    criteria.map((c) => ({
-      criterionName: c.criterionName,
-      score: c.score ? parseFloat(c.score) : 0,
-      findings: c.findings ?? "",
-    }));
+  // Build results for AnalysisResults - support both legacy (array) and new (object with criteria + philosophies) formats
+  type CriterionResult = { criterionName: string; score: number; findings: string };
+  type PhilosophyResult = {
+    philosophyId: string;
+    philosophyName: string;
+    verdict: string;
+    confidenceScore: number;
+    metricsFound: string[];
+    metricsNotFound: string[];
+    findings: string;
+  };
+  const rawResults = analysis.results as
+    | CriterionResult[]
+    | { criteria?: CriterionResult[]; philosophies?: PhilosophyResult[] }
+    | null
+    | undefined;
+
+  const results: CriterionResult[] =
+    Array.isArray(rawResults)
+      ? rawResults
+      : (rawResults as { criteria?: CriterionResult[] })?.criteria ??
+        criteria.map((c) => ({
+          criterionName: c.criterionName,
+          score: c.score ? parseFloat(c.score) : 0,
+          findings: c.findings ?? "",
+        }));
+
+  const philosophies: PhilosophyResult[] =
+    rawResults && !Array.isArray(rawResults) && (rawResults as { philosophies?: PhilosophyResult[] }).philosophies
+      ? (rawResults as { philosophies: PhilosophyResult[] }).philosophies
+      : [];
 
   const analysisForDisplay = {
     ...analysis,
     results,
+    philosophies,
   };
 
   const verdictStyles: Record<string, { bg: string; text: string }> = {

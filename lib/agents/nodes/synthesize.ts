@@ -47,7 +47,7 @@ ${a.findings}
 Provide:
 1. Overall verdict (POSITIVE, NEGATIVE, NEUTRAL, or MIXED)
 2. Confidence score (0-1)
-3. Executive summary (2-3 paragraphs)`;
+3. Executive summary (2-3 paragraphs) - synthesize ONLY from the analysis above; do not add new claims or facts beyond what is stated.`;
 
   try {
     const structuredModel = getModel().withStructuredOutput(synthesisSchema);

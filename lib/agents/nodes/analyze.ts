@@ -31,18 +31,18 @@ export async function analyzeNode(state: AnalysisState): Promise<Partial<Analysi
   for (const criterion of criteria) {
     console.log(`Analyzing criterion: ${criterion.name}`);
 
-    // Filter relevant chunks for this criterion using category matching
+    // Filter relevant chunks for this criterion using category matching (stricter: require match when categories exist)
     const relevantChunks = retrievedChunks.filter((chunk) => {
       if (criterion.categories.length > 0) {
         const chunkCategories = (chunk.metadata.categories as string[]) || [];
         return criterion.categories.some((cat) => chunkCategories.includes(cat));
       }
       return true;
-    }).slice(0, 10);
+    }).slice(0, 6); // Fewer chunks = less noise, better faithfulness
 
     if (relevantChunks.length === 0) {
       console.log(`  No category-matched chunks found, using all available chunks`);
-      const fallbackChunks = retrievedChunks.slice(0, 10);
+      const fallbackChunks = retrievedChunks.slice(0, 6);
 
       if (fallbackChunks.length === 0) {
         analyses.push({
@@ -62,7 +62,14 @@ export async function analyzeNode(state: AnalysisState): Promise<Partial<Analysi
         })
         .join("\n\n---\n\n");
 
-      const prompt = criterion.promptTemplate.replace("{context}", context);
+      const basePrompt = criterion.promptTemplate.replace("{context}", context);
+      const prompt = `${basePrompt}
+
+CRITICAL - Grounding rules:
+- Only make claims that are DIRECTLY supported by the context above
+- If information is missing, say "The document does not provide sufficient information on..." rather than inferring
+- Do not extrapolate or assume beyond what is explicitly stated
+- Cite specific numbers and facts from the context when possible`;
 
       try {
         const structuredModel = getModel().withStructuredOutput(criterionAnalysisSchema);
@@ -102,7 +109,14 @@ export async function analyzeNode(state: AnalysisState): Promise<Partial<Analysi
       })
       .join("\n\n---\n\n");
 
-    const prompt = criterion.promptTemplate.replace("{context}", context);
+    const basePrompt = criterion.promptTemplate.replace("{context}", context);
+    const prompt = `${basePrompt}
+
+CRITICAL - Grounding rules:
+- Only make claims that are DIRECTLY supported by the context above
+- If information is missing, say "The document does not provide sufficient information on..." rather than inferring
+- Do not extrapolate or assume beyond what is explicitly stated
+- Cite specific numbers and facts from the context when possible`;
 
     try {
       const structuredModel = getModel().withStructuredOutput(criterionAnalysisSchema);

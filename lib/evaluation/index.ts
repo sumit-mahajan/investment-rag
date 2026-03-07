@@ -59,3 +59,10 @@ export type {
 
 // Re-export for convenience
 export { evaluateRAG } from './rag-metrics'; // Legacy evaluator
+
+// LangSmith integration
+export {
+  loadTestCasesFromLangSmith,
+  loadTestCasesFromDataset,
+  type LangSmithLoaderOptions,
+} from './langsmith-loader';

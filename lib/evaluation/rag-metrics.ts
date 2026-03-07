@@ -3,12 +3,13 @@
  * Based on RAGAS framework concepts
  */
 
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { z } from "zod";
 
-const baseModel = new ChatOpenAI({
-  modelName: "gpt-4o-mini",
+const baseModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.5-flash",
   temperature: 0,
+  apiKey: process.env.GOOGLE_API_KEY ?? process.env.GOOGLE_GENAI_API_KEY,
 });
 
 const faithfulnessSchema = z.object({

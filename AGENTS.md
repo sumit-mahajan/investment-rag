@@ -6,6 +6,6 @@ Use production grade sde2 level architecture for frontend as well. For React, co
 
 Use frontend skills for modern clean landing page with subtle animations. It should reflect clearly what problem app solves with engaging Hero section, core clear features, how it practically solves the problem, how it works internally without jargon, professional navbar and footer. When updating/adding/removing core important features, landing page should be updated with that. Entire UI should be modern minimal, extremely easy and good UX. Should be responsive across all screen sizes. Use frontend skills
 
-Use vercel ai sdk and standard tooling for any ai functionality within app. Use the free gemini flash model available. Since I’ll be building demos, try to keep everything free and best in class, but providing options along with trade-offs
+Use vercel ai sdk and standard tooling for any ai functionality within app. Use the free gemini flash model available. Use structured ouputs wherever needed with zod schemas. Since I’ll be building demos, try to keep everything free and best in class, but providing options along with trade-offs
 
 Use clerk for authentication wherever possible

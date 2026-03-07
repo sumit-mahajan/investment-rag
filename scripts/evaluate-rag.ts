@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 /**
  * CLI tool for running RAGAS evaluations
- * 
+ *
  * Usage:
  *   npx tsx scripts/evaluate-rag.ts --file test-cases.json
  *   npx tsx scripts/evaluate-rag.ts --question "..." --answer "..." --contexts "..." "..."
  *   npx tsx scripts/evaluate-rag.ts --file test-cases.json --output results.json
  */
+
+import "dotenv/config";
 
 import * as fs from 'fs';
 import * as path from 'path';
@@ -18,6 +20,7 @@ import {
   type EvaluationInput,
   type DetailedEvaluation,
 } from "../lib/evaluation";
+import { loadTestCasesFromLangSmith } from "@/lib/evaluation/langsmith-loader";
 import { isFaithfulnessDetails, isPrecisionDetails, isCorrectnessDetails } from "@/lib/types/evaluation";
 
 // ============================================================================
@@ -26,6 +29,10 @@ import { isFaithfulnessDetails, isPrecisionDetails, isCorrectnessDetails } from 
 
 interface CliArgs {
   file?: string;
+  langsmith?: boolean;
+  project?: string;
+  limit?: number;
+  hours?: number;
   question?: string;
   answer?: string;
   contexts?: string[];
@@ -48,6 +55,19 @@ function parseArgs(): CliArgs {
       case '--file':
       case '-f':
         args.file = argv[++i];
+        break;
+      case '--langsmith':
+      case '-l':
+        args.langsmith = true;
+        break;
+      case '--project':
+        args.project = argv[++i];
+        break;
+      case '--limit':
+        args.limit = parseInt(argv[++i], 10);
+        break;
+      case '--hours':
+        args.hours = parseInt(argv[++i], 10);
         break;
       case '--question':
       case '-q':
@@ -113,6 +133,10 @@ Usage:
 
 Options:
   -f, --file <path>           JSON file with test case(s)
+  -l, --langsmith             Load test cases from LangSmith traces
+  --project <name>            LangSmith project (default: LANGCHAIN_PROJECT)
+  --limit <n>                 Max runs to fetch from LangSmith (default: 20)
+  --hours <n>                 Only include runs from last N hours
   -q, --question <text>       Question for single evaluation
   -a, --answer <text>         Answer for single evaluation
   -c, --contexts <text...>    Context chunks (space-separated)
@@ -127,6 +151,10 @@ Options:
 Examples:
   # Evaluate from file
   npx tsx scripts/evaluate-rag.ts --file test-cases.json
+
+  # Evaluate from LangSmith traces (captured from your running app)
+  npx tsx scripts/evaluate-rag.ts --langsmith --parallel --output results.json
+  npx tsx scripts/evaluate-rag.ts --langsmith --project investment-rag --limit 50 --hours 24
 
   # Single evaluation
   npx tsx scripts/evaluate-rag.ts \\
@@ -226,13 +254,42 @@ async function evaluateSingle(args: CliArgs): Promise<DetailedEvaluation> {
 }
 
 async function evaluateMultiple(args: CliArgs) {
-  if (!args.file) {
-    console.error('Error: --file is required for batch evaluation');
+  let testCases: EvaluationInput[];
+
+  if (args.langsmith) {
+    try {
+      testCases = await loadTestCasesFromLangSmith({
+        projectName: args.project,
+        limit: args.limit ?? 20,
+        hoursBack: args.hours,
+        excludeErrors: true,
+      });
+    } catch (error) {
+      console.error('Error loading from LangSmith:', error);
+      process.exit(1);
+    }
+  } else if (args.file) {
+    testCases = readTestCases(args.file);
+    console.log(`Loaded ${testCases.length} test case(s) from ${args.file}\n`);
+  } else {
+    console.error('Error: --file or --langsmith is required for batch evaluation');
     process.exit(1);
   }
 
-  const testCases = readTestCases(args.file);
-  console.log(`Loaded ${testCases.length} test case(s) from ${args.file}\n`);
+  if (testCases.length === 0) {
+    console.error('\n❌ No test cases found.');
+    if (args.langsmith) {
+      console.error('\nPossible reasons:');
+      console.error('  1. No completed analysis runs in the project');
+      console.error('  2. LANGCHAIN_PROJECT mismatch (check .env)');
+      console.error('  3. All runs have errors (try without --exclude-errors)');
+      console.error('  4. Runs don\'t have the expected LangGraph state structure');
+      console.error('\nTip: Run an analysis in your app first with tracing enabled.');
+    }
+    process.exit(1);
+  }
+
+  console.log(`✓ Ready to evaluate ${testCases.length} test case(s)\n`);
 
   if (testCases.length === 1) {
     return await evaluateRAGAS(testCases[0]);
@@ -385,9 +442,15 @@ async function main() {
   const args = parseArgs();
 
   // Validate environment
-  if (!process.env.GOOGLE_GENAI_API_KEY) {
-    console.error('❌ Error: GOOGLE_GENAI_API_KEY environment variable not set');
-    console.error('   Set it with: export GOOGLE_GENAI_API_KEY="your-api-key"');
+  if (!process.env.GOOGLE_GENAI_API_KEY && !process.env.GOOGLE_API_KEY) {
+    console.error('❌ Error: GOOGLE_GENAI_API_KEY or GOOGLE_API_KEY environment variable not set');
+    console.error('   Set it in .env or: export GOOGLE_GENAI_API_KEY="your-api-key"');
+    process.exit(1);
+  }
+
+  if (args.langsmith && !process.env.LANGCHAIN_API_KEY) {
+    console.error('❌ Error: LANGCHAIN_API_KEY required for --langsmith');
+    console.error('   Set it in .env or: export LANGCHAIN_API_KEY="your-key"');
     process.exit(1);
   }
 
@@ -396,7 +459,7 @@ async function main() {
     const startTime = Date.now();
 
     // Determine evaluation mode
-    if (args.file) {
+    if (args.file || args.langsmith) {
       result = await evaluateMultiple(args);
     } else {
       result = await evaluateSingle(args);

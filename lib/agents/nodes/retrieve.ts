@@ -1,5 +1,6 @@
 import { retrieveRelevantChunks } from "@/lib/services/retrieval-service";
 import { AnalysisState } from "../financial-analyzer";
+import { investmentPhilosophies } from "@/config/philosophies.config";
 
 export async function retrieveNode(state: AnalysisState): Promise<Partial<AnalysisState>> {
   console.log("Retrieve node: Fetching relevant chunks");
@@ -9,19 +10,40 @@ export async function retrieveNode(state: AnalysisState): Promise<Partial<Analys
   const allChunks = [];
 
   for (const criterion of criteria) {
-    // Build query focused on the criterion (categories handled in analyze node)
-    const query = `${criterion.name}: ${criterion.description}`;
+    // Build targeted query with key metrics for better retrieval precision
+    const keyMetricsPart =
+      criterion.keyMetrics?.length > 0
+        ? ` Key metrics: ${criterion.keyMetrics.slice(0, 4).join(", ")}.`
+        : "";
+    const query = `${criterion.name}: ${criterion.description}.${keyMetricsPart}`;
 
     const chunks = await retrieveRelevantChunks({
       documentId,
       userId,
       query,
-      topK: 10,
+      topK: 15, // Retrieve more, then rerank to fewer for precision
+      rerankTopK: 6,
       useExpansion: true,
       useReranking: true,
       useDiversity: true,
     });
 
+    allChunks.push(...chunks);
+  }
+
+  // Always fetch chunks for value and growth investing (in addition to user criteria)
+  for (const [, config] of Object.entries(investmentPhilosophies)) {
+    const query = `${config.name}: ${config.keyMetrics.join(", ")}`;
+    const chunks = await retrieveRelevantChunks({
+      documentId,
+      userId,
+      query,
+      topK: 12,
+      rerankTopK: 6,
+      useExpansion: true,
+      useReranking: true,
+      useDiversity: true,
+    });
     allChunks.push(...chunks);
   }
 

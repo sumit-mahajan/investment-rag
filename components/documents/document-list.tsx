@@ -1,27 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { FileText, Trash2, ArrowRight, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { FileText, Trash2, ArrowRight, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { formatDate, formatFileSize } from "@/lib/utils";
 import type { DocumentListItem } from "@/lib/types";
+import { deleteDocumentAction } from "@/app/actions/documents";
+import { toast } from "sonner";
 
 export function DocumentList({ documents }: { documents: DocumentListItem[] }) {
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
 
+    setDeletingId(id);
     try {
-      const response = await fetch(`/api/documents/${id}`, {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        window.location.reload();
+      const result = await deleteDocumentAction(id);
+      
+      if (result.success) {
+        toast.success(result.data.message);
+      } else {
+        toast.error(result.error);
       }
     } catch (error) {
       console.error("Delete error:", error);
+      toast.error("Failed to delete document");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -102,9 +111,14 @@ export function DocumentList({ documents }: { documents: DocumentListItem[] }) {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => handleDelete(doc.id)}
+                  disabled={deletingId === doc.id}
                   className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  {deletingId === doc.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
                 </Button>
               </div>
             </div>

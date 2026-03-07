@@ -21,13 +21,13 @@ npm run evaluate:batch    # Batch with stats
 ### In Code
 
 ```typescript
-import { evaluateRAGAS } from '@/lib/evaluation';
+import { evaluateRAGAS } from "@/lib/evaluation";
 
 const result = await evaluateRAGAS({
   question: "What was Apple's Q1 2024 revenue?",
   answer: "Apple reported revenue of $119.6B in Q1 2024",
   contexts: ["Apple Inc. posted quarterly revenue of $119.6B..."],
-  ground_truth: "Apple's Q1 2024 revenue was $119.6B" // optional
+  ground_truth: "Apple's Q1 2024 revenue was $119.6B", // optional
 });
 
 console.log(`Faithfulness: ${result.faithfulness}`);
@@ -37,7 +37,7 @@ console.log(`Correctness: ${result.answer_correctness}`);
 // Check quality thresholds
 const { passes, failing_metrics } = meetsQualityThresholds(result, {
   faithfulness: 0.8,
-  answer_relevancy: 0.7
+  answer_relevancy: 0.7,
 });
 ```
 
@@ -80,6 +80,7 @@ npx tsx scripts/evaluate-rag.ts \
 ```
 
 Test case JSON format:
+
 ```json
 {
   "question": "What was Apple's Q1 revenue?",
@@ -93,14 +94,14 @@ Test case JSON format:
 
 All scores are 0-1 (higher is better):
 
-| Metric | Measures | Needs Ground Truth? |
-|--------|----------|---------------------|
-| **Faithfulness** | Are claims supported by context? (detects hallucinations) | No |
-| **Answer Relevancy** | Does answer address the question? | No |
-| **Context Precision** | Is retrieved context relevant? | No |
-| **Context Recall** | Does context contain all needed info? | Yes |
-| **Semantic Similarity** | Semantic match to ground truth? | Yes |
-| **Answer Correctness** | Overall factual correctness (F1-based)? | Yes |
+| Metric                  | Measures                                                  | Needs Ground Truth? |
+| ----------------------- | --------------------------------------------------------- | ------------------- |
+| **Faithfulness**        | Are claims supported by context? (detects hallucinations) | No                  |
+| **Answer Relevancy**    | Does answer address the question?                         | No                  |
+| **Context Precision**   | Is retrieved context relevant?                            | No                  |
+| **Context Recall**      | Does context contain all needed info?                     | Yes                 |
+| **Semantic Similarity** | Semantic match to ground truth?                           | Yes                 |
+| **Answer Correctness**  | Overall factual correctness (F1-based)?                   | Yes                 |
 
 ### Recommended Thresholds
 
@@ -120,12 +121,12 @@ All scores are 0-1 (higher is better):
 ### 1. Development Testing
 
 ```typescript
-test('RAG quality check', async () => {
+test("RAG quality check", async () => {
   const result = await evaluateRAGAS({
     question: testQuestion,
     answer: generatedAnswer,
     contexts: retrievedContexts,
-    ground_truth: expectedAnswer
+    ground_truth: expectedAnswer,
   });
 
   const check = meetsQualityThresholds(result);
@@ -153,7 +154,7 @@ test('RAG quality check', async () => {
 // Sample 1% of production traffic
 if (Math.random() < 0.01) {
   evaluateRAGAS({ question, answer, contexts })
-    .then(metrics => logToDatabase(metrics))
+    .then((metrics) => logToDatabase(metrics))
     .catch(console.error);
 }
 ```
@@ -164,8 +165,8 @@ if (Math.random() < 0.01) {
 const configA = await evaluateBatch(testCasesWithConfigA);
 const configB = await evaluateBatch(testCasesWithConfigB);
 
-console.log('Config A Quality:', configA.aggregate_metrics.faithfulness);
-console.log('Config B Quality:', configB.aggregate_metrics.faithfulness);
+console.log("Config A Quality:", configA.aggregate_metrics.faithfulness);
+console.log("Config B Quality:", configB.aggregate_metrics.faithfulness);
 ```
 
 ## Implementation Details
@@ -197,27 +198,33 @@ scripts/
 Each metric uses Gemini Flash 2.5 with structured outputs (Zod schemas):
 
 **Faithfulness**
+
 1. LLM extracts atomic statements from answer
 2. Checks each statement against context
 3. Score = supported_statements / total_statements
 
 **Answer Relevancy**
+
 - LLM rates how well answer addresses question (0-1 scale)
 - Penalizes irrelevant information
 
 **Context Precision**
+
 - LLM rates relevance of each retrieved context chunk
 - Uses weighted scoring (earlier contexts weighted more)
 
 **Context Recall** (requires ground truth)
+
 1. Extracts statements from ground truth
 2. Checks if each found in retrieved contexts
 3. Score = attributed_statements / total_statements
 
 **Semantic Similarity** (requires ground truth)
+
 - LLM compares semantic meaning (not exact words)
 
 **Answer Correctness** (requires ground truth)
+
 - Calculates TP, FP, FN
 - Combines F1 score + semantic similarity
 
@@ -281,9 +288,9 @@ interface DetailedEvaluation {
   answer_semantic_similarity: number;
   answer_correctness: number;
   evaluation_details: {
-    faithfulness_details?: { statements, verdicts, reasoning };
+    faithfulness_details?: { statements; verdicts; reasoning };
     relevancy_details?: { reasoning };
-    precision_details?: { relevance_scores, reasoning };
+    precision_details?: { relevance_scores; reasoning };
     // ... more
   };
   timestamp: string;
@@ -294,19 +301,23 @@ interface DetailedEvaluation {
 ## Cost & Performance
 
 **Gemini Flash 2.5 Pricing:**
+
 - Input: $0.10 / 1M tokens
 - Output: $0.40 / 1M tokens
 
 **Typical Costs:**
+
 - Single evaluation: ~$0.0005 (~500-1000 tokens)
 - 100 test cases: ~$0.05
 - 1000 test cases: ~$0.50
 
 **Speed (100 test cases):**
+
 - Sequential: ~150 seconds
 - Parallel (batch=5): ~45 seconds
 
 **vs. Old Evaluator (GPT-4o-mini):**
+
 - 50% cheaper
 - 3x faster (parallel)
 - 2 more metrics (6 vs 4)
@@ -315,17 +326,20 @@ interface DetailedEvaluation {
 ## Troubleshooting
 
 **API key not set:**
+
 ```bash
 export GOOGLE_GENAI_API_KEY="your-key"
 ```
 
 **Rate limit errors:**
+
 ```typescript
 // Reduce batch size
 await evaluateBatch(cases, { batchSize: 2 });
 ```
 
 **Timeout errors:**
+
 ```typescript
 // Process sequentially
 await evaluateBatch(cases, { parallel: false });
@@ -334,6 +348,7 @@ await evaluateBatch(cases, { parallel: false });
 ## Examples
 
 See `scripts/evaluate-rag-example.ts` for comprehensive examples:
+
 - Single evaluation with all metrics
 - Evaluation without ground truth
 - Batch evaluation with statistics

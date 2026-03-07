@@ -25,7 +25,7 @@ export class DocumentProcessorService {
   constructor(
     private readonly documentRepo: DocumentRepository,
     private readonly chunkRepo: DocumentChunkRepository
-  ) {}
+  ) { }
 
   async processDocument(input: ProcessDocumentInput): Promise<void> {
     const { documentId, userId, fileBuffer } = input;
@@ -80,8 +80,8 @@ export class DocumentProcessorService {
       if (emptyIndices.length > 0) {
         throw new Error(
           `Embedding API returned empty vectors for ${emptyIndices.length} chunk(s). ` +
-            `Check GOOGLE_API_KEY and embedding model "${ragConfig.embedding.model}". ` +
-            `Try reducing embedding.batchSize in config (current: ${ragConfig.embedding.batchSize}).`
+          `Check GOOGLE_API_KEY and embedding model "${ragConfig.embedding.model}". ` +
+          `Try reducing embedding.batchSize in config (current: ${ragConfig.embedding.batchSize}).`
         );
       }
 

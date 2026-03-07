@@ -1,13 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Upload, FileText, X, CheckCircle2 } from "lucide-react";
+import { registerDocumentAction } from "@/app/actions/documents";
+import { toast } from "sonner";
 
 export function DocumentUploader() {
+  const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -67,35 +71,30 @@ export function DocumentUploader() {
 
       console.log("Blob upload completed:", blob.url);
 
-      // Step 2: Register the uploaded document with our backend
+      // Step 2: Register the uploaded document with our backend via Server Action
       setProgress(95);
-      const registerResponse = await fetch("/api/documents/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          blobUrl: blob.url,
-          filename: file.name,
-        }),
-      });
+      const result = await registerDocumentAction(blob.url, file.name);
 
-      if (!registerResponse.ok) {
-        const data = await registerResponse.json();
-        throw new Error(data.error || "Failed to register document");
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       setProgress(100);
       console.log("Document registered successfully");
+      toast.success("Document uploaded and processing started");
 
       // Reset after success
       setTimeout(() => {
         setFile(null);
         setUploading(false);
         setProgress(0);
-        window.location.reload();
+        router.refresh();
       }, 500);
     } catch (err) {
       console.error("Upload error:", err);
-      setError(err instanceof Error ? err.message : "Upload failed");
+      const errorMessage = err instanceof Error ? err.message : "Upload failed";
+      setError(errorMessage);
+      toast.error(errorMessage);
       setUploading(false);
       setProgress(0);
     }
@@ -105,30 +104,37 @@ export function DocumentUploader() {
     <Card className="border-slate-200 bg-white shadow-sm">
       <CardContent className="p-6">
         {!file ? (
-          <label
-            className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-          >
-            <div className="flex flex-col items-center justify-center space-y-3">
-              <div className="p-3 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                <Upload className="w-6 h-6 text-blue-600" />
+          <div className="space-y-4">
+            <label
+              className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
+              <div className="flex flex-col items-center justify-center space-y-3">
+                <div className="p-3 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                  <Upload className="w-6 h-6 text-blue-600" />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-slate-900">
+                    <span className="text-blue-600">Click to upload</span> or drag and drop
+                  </p>
+                  <p className="text-xs text-slate-500 mt-1">PDF files only (MAX. 50MB)</p>
+                </div>
               </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-slate-900">
-                  <span className="text-blue-600">Click to upload</span> or drag and drop
-                </p>
-                <p className="text-xs text-slate-500 mt-1">PDF files only (MAX. 50MB)</p>
+              <input
+                type="file"
+                className="hidden"
+                accept="application/pdf"
+                onChange={handleFileSelect}
+                disabled={uploading}
+              />
+            </label>
+            {error && (
+              <div className="p-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
+                {error}
               </div>
-            </div>
-            <input
-              type="file"
-              className="hidden"
-              accept="application/pdf"
-              onChange={handleFileSelect}
-              disabled={uploading}
-            />
-          </label>
+            )}
+          </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50">

@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
-import { db } from "@/lib/db/client";
-import { documents, analyses } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { DocumentService } from "@/lib/services/document.service";
+import { AnalysisService } from "@/lib/services/analysis.service";
 import {
   Card,
   CardContent,
@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { DocumentUploader } from "@/components/documents/document-uploader";
 import { DocumentList } from "@/components/documents/document-list";
+import type { DocumentListItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -23,28 +24,28 @@ export default async function DashboardPage() {
     redirect("/sign-in");
   }
 
-  // Get user's documents
-  const userDocuments = await db
-    .select()
-    .from(documents)
-    .where(eq(documents.userId, userId))
-    .orderBy(desc(documents.createdAt));
+  const documentService = container.resolve(DocumentService);
+  const analysisService = container.resolve(AnalysisService);
 
-  // Get user's recent analyses
-  const recentAnalyses = await db
-    .select({
-      id: analyses.id,
-      verdict: analyses.verdict,
-      status: analyses.status,
-      createdAt: analyses.createdAt,
-      documentName: documents.originalName,
-      companyName: documents.companyName,
-    })
-    .from(analyses)
-    .innerJoin(documents, eq(analyses.documentId, documents.id))
-    .where(eq(analyses.userId, userId))
-    .orderBy(desc(analyses.createdAt))
-    .limit(3);
+  // Fetch documents and analyses via services (not direct DB)
+  const [userDocuments, allAnalyses] = await Promise.all([
+    documentService.listUserDocuments(userId),
+    analysisService.listUserAnalyses(userId),
+  ]);
+
+  const recentAnalyses = allAnalyses.slice(0, 3);
+
+  // Map to DocumentListItem (ensure totalChunks is number)
+  const documentListItems: DocumentListItem[] = userDocuments.map((doc) => ({
+    id: doc.id,
+    originalName: doc.originalName,
+    companyName: doc.companyName,
+    tickerSymbol: doc.tickerSymbol,
+    status: doc.status,
+    fileSize: doc.fileSize,
+    createdAt: doc.createdAt,
+    totalChunks: doc.totalChunks ?? 0,
+  }));
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">
@@ -71,9 +72,9 @@ export default async function DashboardPage() {
 
           <div className="space-y-4">
             <h3 className="text-sm font-medium text-slate-700 uppercase tracking-wide">
-              Your Documents ({userDocuments.length})
+              Your Documents ({documentListItems.length})
             </h3>
-            <DocumentList documents={userDocuments as any} />
+            <DocumentList documents={documentListItems} />
           </div>
         </div>
 

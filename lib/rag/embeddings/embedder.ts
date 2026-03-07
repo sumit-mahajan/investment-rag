@@ -96,7 +96,7 @@ export class Embedder {
         console.error(`Embedding batch ${Math.floor(i / batchSize) + 1} failed:`, error);
         throw new Error(
           `Embedding API failed: ${error instanceof Error ? error.message : String(error)}. ` +
-            `Check your GOOGLE_API_KEY and ensure the model "${this.config.model}" is accessible.`
+          `Check your GOOGLE_API_KEY and ensure the model "${this.config.model}" is accessible.`
         );
       }
     }

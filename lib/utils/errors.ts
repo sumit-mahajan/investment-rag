@@ -1,44 +1,36 @@
-export class AppError extends Error {
-  constructor(
-    message: string,
-    public statusCode: number = 500,
-    public code?: string
-  ) {
-    super(message);
-    this.name = "AppError";
-  }
-}
+// Re-export domain errors for backward compatibility
+export {
+  DomainError as AppError,
+  ValidationError,
+  NotFoundError,
+  UnauthorizedError,
+  ProcessingError,
+  ConflictError,
+  RepositoryError,
+  ExternalServiceError,
+} from "@/lib/errors/domain-errors";
 
-export class ValidationError extends AppError {
-  constructor(message: string) {
-    super(message, 400, "VALIDATION_ERROR");
-    this.name = "ValidationError";
-  }
-}
+import { ZodError } from "zod";
+import { DomainError } from "@/lib/errors/domain-errors";
 
-export class NotFoundError extends AppError {
-  constructor(message: string) {
-    super(message, 404, "NOT_FOUND");
-    this.name = "NotFoundError";
+/**
+ * Handle errors and convert them to consistent HTTP response format
+ */
+export function handleError(error: unknown): { 
+  message: string; 
+  statusCode: number; 
+  code?: string 
+} {
+  if (error instanceof ZodError) {
+    const message = error.errors.map((e) => e.message).join("; ") || "Validation failed";
+    return {
+      message,
+      statusCode: 400,
+      code: "VALIDATION_ERROR",
+    };
   }
-}
 
-export class UnauthorizedError extends AppError {
-  constructor(message: string) {
-    super(message, 401, "UNAUTHORIZED");
-    this.name = "UnauthorizedError";
-  }
-}
-
-export class ProcessingError extends AppError {
-  constructor(message: string) {
-    super(message, 500, "PROCESSING_ERROR");
-    this.name = "ProcessingError";
-  }
-}
-
-export function handleError(error: unknown): { message: string; statusCode: number; code?: string } {
-  if (error instanceof AppError) {
+  if (error instanceof DomainError) {
     return {
       message: error.message,
       statusCode: error.statusCode,
@@ -60,3 +52,4 @@ export function handleError(error: unknown): { message: string; statusCode: numb
     code: "UNKNOWN_ERROR",
   };
 }
+

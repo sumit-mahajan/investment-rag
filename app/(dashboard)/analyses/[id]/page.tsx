@@ -1,8 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect, notFound } from "next/navigation";
-import { db } from "@/lib/db/client";
-import { analyses, documents, analysisCriteria } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { AnalysisService } from "@/lib/services/analysis.service";
+import { DocumentService } from "@/lib/services/document.service";
 import { AnalysisResults } from "@/components/analysis/analysis-results";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -25,28 +25,27 @@ export default async function AnalysisDetailPage({
     redirect("/sign-in");
   }
 
-  const [analysis] = await db
-    .select()
-    .from(analyses)
-    .where(and(eq(analyses.id, id), eq(analyses.userId, userId)));
+  const analysisService = container.resolve(AnalysisService);
+  const documentService = container.resolve(DocumentService);
 
-  if (!analysis) {
+  let analysisWithCriteria;
+  try {
+    analysisWithCriteria = await analysisService.getAnalysis(userId, id);
+  } catch {
     notFound();
   }
 
-  const [document] = await db
-    .select({
-      originalName: documents.originalName,
-      companyName: documents.companyName,
-      id: documents.id,
-    })
-    .from(documents)
-    .where(eq(documents.id, analysis.documentId));
+  const { criteria, ...analysis } = analysisWithCriteria;
 
-  const criteria = await db
-    .select()
-    .from(analysisCriteria)
-    .where(eq(analysisCriteria.analysisId, id));
+  // Fetch document for display (header, links)
+  let document: { id: string; originalName: string; companyName: string | null };
+  try {
+    const doc = await documentService.getDocument(userId, analysis.documentId);
+    document = { id: doc.id, originalName: doc.originalName, companyName: doc.companyName ?? null };
+  } catch {
+    // Document may have been deleted; use documentId for links
+    document = { id: analysis.documentId, originalName: "Unknown", companyName: null };
+  }
 
   // Build results for AnalysisResults - use analysis.results if available, else map from criteria
   const results =

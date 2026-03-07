@@ -1,6 +1,5 @@
-import { db } from "@/lib/db/client";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { UserService } from "./user.service";
 
 type ClerkUser = {
   id: string;
@@ -14,32 +13,10 @@ type ClerkUser = {
  * Ensures the user exists in the database. If not, creates the record.
  * Use this before operations that require a foreign key to users (e.g. document upload).
  * Handles cases where Clerk webhook hasn't run (e.g. local dev, webhook not configured).
+ *
+ * @deprecated Use UserService.ensureUser() directly instead
  */
 export async function ensureUser(clerkUser: ClerkUser): Promise<void> {
-  const existing = await db
-    .select({ id: users.id })
-    .from(users)
-    .where(eq(users.id, clerkUser.id))
-    .limit(1);
-
-  if (existing.length > 0) {
-    return;
-  }
-
-  const email = clerkUser.emailAddresses?.[0]?.emailAddress;
-  if (!email) {
-    throw new Error("User has no email address");
-  }
-
-  const name = [clerkUser.firstName, clerkUser.lastName]
-    .filter(Boolean)
-    .join(" ")
-    .trim() || null;
-
-  await db.insert(users).values({
-    id: clerkUser.id,
-    email,
-    name,
-    imageUrl: clerkUser.imageUrl || null,
-  });
+  const userService = container.resolve(UserService);
+  await userService.ensureUser(clerkUser as any);
 }

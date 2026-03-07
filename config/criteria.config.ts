@@ -1,6 +1,6 @@
-import { AnalysisCriterion } from "@/types/analysis";
+import { CriteriaConfig } from "@/lib/types/analysis";
 
-export const analysisCriteria: Record<string, AnalysisCriterion> = {
+export const analysisCriteria: Record<string, CriteriaConfig> = {
   "financial-health": {
     id: "financial-health",
     name: "Financial Health",

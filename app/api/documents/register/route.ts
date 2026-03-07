@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { currentUser } from "@clerk/nextjs/server";
-import { db } from "@/lib/db/client";
-import { documents } from "@/lib/db/schema";
-import { processDocument } from "@/lib/services/document-processor";
-import { ensureUser } from "@/lib/services/ensure-user";
+import { container } from "@/lib/di";
+import { DocumentService } from "@/lib/services/document.service";
+import { UserService } from "@/lib/services/user.service";
 import { handleError } from "@/lib/utils/errors";
 
 export const runtime = "nodejs";
@@ -25,6 +24,9 @@ interface RegisterRequest {
 }
 
 export async function POST(req: NextRequest) {
+  const documentService = container.resolve(DocumentService);
+  const userService = container.resolve(UserService);
+
   try {
     const user = await currentUser();
 
@@ -32,7 +34,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await ensureUser(user);
+    await userService.ensureUser(user);
 
     const body: RegisterRequest = await req.json();
     const { blobUrl, filename, metadata = {} } = body;
@@ -54,39 +56,13 @@ export async function POST(req: NextRequest) {
     }
 
     const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
-    const fileSize = fileBuffer.length;
 
-    // Create document record
-    const [document] = await db
-      .insert(documents)
-      .values({
-        userId: user.id,
-        filename: blobUrl.split("/").pop() || filename,
-        originalName: filename,
-        fileUrl: blobUrl,
-        fileSize: fileSize,
-        mimeType: "application/pdf",
-        status: "pending",
-        companyName: metadata.companyName,
-        tickerSymbol: metadata.tickerSymbol,
-        cik: metadata.cik,
-        filingType: metadata.filingType,
-        filingDate: metadata.filingDate
-          ? new Date(metadata.filingDate)
-          : undefined,
-        fiscalYear: metadata.fiscalYear,
-        fiscalPeriod: metadata.fiscalPeriod,
-        sourceUrl: metadata.sourceUrl,
-      })
-      .returning();
-
-    // Start processing (don't await - run in background)
-    processDocument({
-      documentId: document.id,
-      userId: user.id,
+    // Register document and start processing
+    const document = await documentService.registerDocument(user.id, {
+      blobUrl,
+      filename,
       fileBuffer,
-    }).catch((error) => {
-      console.error("Background processing error:", error);
+      metadata,
     });
 
     return NextResponse.json({

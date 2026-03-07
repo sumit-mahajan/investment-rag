@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db/client";
-import { analyses, documents } from "@/lib/db/schema";
-import { eq, desc } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { AnalysisService } from "@/lib/services/analysis.service";
 import { handleError } from "@/lib/utils/errors";
 
 export async function GET() {
+  const analysisService = container.resolve(AnalysisService);
   try {
     const { userId } = await auth();
 
@@ -13,23 +13,7 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userAnalyses = await db
-      .select({
-        id: analyses.id,
-        documentId: analyses.documentId,
-        status: analyses.status,
-        verdict: analyses.verdict,
-        confidenceScore: analyses.confidenceScore,
-        summary: analyses.summary,
-        createdAt: analyses.createdAt,
-        completedAt: analyses.completedAt,
-        documentName: documents.originalName,
-        companyName: documents.companyName,
-      })
-      .from(analyses)
-      .innerJoin(documents, eq(analyses.documentId, documents.id))
-      .where(eq(analyses.userId, userId))
-      .orderBy(desc(analyses.createdAt));
+    const userAnalyses = await analysisService.listUserAnalyses(userId);
 
     return NextResponse.json(userAnalyses);
   } catch (error) {

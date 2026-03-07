@@ -1,11 +1,11 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { db } from "@/lib/db/client";
-import { users } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { UserService } from "@/lib/services/user.service";
 
 export async function POST(req: Request) {
+  const userService = container.resolve(UserService);
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -45,38 +45,20 @@ export async function POST(req: Request) {
 
   const eventType = evt.type;
 
-  if (eventType === "user.created") {
+  if (eventType === "user.created" || eventType === "user.updated") {
     const { id, email_addresses, first_name, last_name, image_url } = evt.data;
 
     try {
-      await db.insert(users).values({
+      await userService.syncUserFromWebhook({
         id: id,
         email: email_addresses[0].email_address,
-        name: `${first_name || ""} ${last_name || ""}`.trim() || null,
-        imageUrl: image_url || null,
+        firstName: first_name || undefined,
+        lastName: last_name || undefined,
+        imageUrl: image_url || undefined,
       });
     } catch (error) {
-      console.error("Error creating user:", error);
-      return new Response("Error creating user", { status: 500 });
-    }
-  }
-
-  if (eventType === "user.updated") {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
-
-    try {
-      await db
-        .update(users)
-        .set({
-          email: email_addresses[0].email_address,
-          name: `${first_name || ""} ${last_name || ""}`.trim() || null,
-          imageUrl: image_url || null,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.id, id));
-    } catch (error) {
-      console.error("Error updating user:", error);
-      return new Response("Error updating user", { status: 500 });
+      console.error(`Error ${eventType === "user.created" ? "creating" : "updating"} user:`, error);
+      return new Response(`Error ${eventType === "user.created" ? "creating" : "updating"} user`, { status: 500 });
     }
   }
 
@@ -84,7 +66,7 @@ export async function POST(req: Request) {
     const { id } = evt.data;
 
     try {
-      await db.delete(users).where(eq(users.id, id!));
+      await userService.deleteUser(id!);
     } catch (error) {
       console.error("Error deleting user:", error);
       return new Response("Error deleting user", { status: 500 });
@@ -93,3 +75,4 @@ export async function POST(req: Request) {
 
   return new Response("", { status: 200 });
 }
+

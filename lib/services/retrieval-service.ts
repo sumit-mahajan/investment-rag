@@ -2,7 +2,7 @@ import { hybridSearch, applyMMR, SearchOptions } from "@/lib/rag/retrieval/hybri
 import { rerankResults } from "@/lib/rag/retrieval/reranker";
 import { expandQuery } from "@/lib/rag/retrieval/query-expansion";
 import { ragConfig } from "@/config/rag.config";
-import { HybridSearchResult } from "@/types/rag";
+import { HybridSearchResult } from "@/lib/types/rag";
 
 export interface RetrievalOptions extends SearchOptions {
   useExpansion?: boolean;

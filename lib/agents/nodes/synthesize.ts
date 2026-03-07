@@ -1,7 +1,7 @@
 import { ChatGroq } from "@langchain/groq";
 import { z } from "zod";
 import { AnalysisState } from "../financial-analyzer";
-import { Verdict } from "@/types/analysis";
+import { Verdict } from "@/lib/types/analysis";
 
 const synthesisSchema = z.object({
   verdict: z.enum(["POSITIVE", "NEGATIVE", "NEUTRAL", "MIXED"]).describe("Overall investment verdict"),

@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { EmbeddingConfig } from "@/types/rag";
+import { EmbeddingConfig } from "@/lib/types/rag";
 import { db } from "@/lib/db/client";
 import { embeddingsCache } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";

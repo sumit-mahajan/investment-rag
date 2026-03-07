@@ -182,7 +182,7 @@ lib/evaluation/
 ├── index.ts              # Exports
 └── rag-metrics.ts        # Old evaluator (legacy)
 
-types/evaluation.ts       # TypeScript types
+lib/types/evaluation.ts   # TypeScript types
 
 scripts/
 ├── evaluate-rag.ts            # CLI tool
@@ -344,7 +344,7 @@ Run: `npm run evaluate:example`
 ## Files
 
 - `lib/evaluation/ragas-evaluator.ts` - Main implementation
-- `types/evaluation.ts` - TypeScript types
+- `lib/types/evaluation.ts` - TypeScript types
 - `scripts/evaluate-rag.ts` - CLI tool
 - `scripts/evaluate-rag-example.ts` - Examples
 - `scripts/test-cases/` - Sample test cases

@@ -5,6 +5,7 @@
  */
 
 import "dotenv/config";
+import "@/lib/di"; // Bootstrap DI container for processDocument
 import { db } from "@/lib/db/client";
 import { documents, documentChunks } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";

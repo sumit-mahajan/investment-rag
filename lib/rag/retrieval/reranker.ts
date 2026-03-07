@@ -1,5 +1,5 @@
 import { CohereClient } from "cohere-ai";
-import { HybridSearchResult } from "@/types/rag";
+import { HybridSearchResult } from "@/lib/types/rag";
 
 let cohereClient: CohereClient | null = null;
 

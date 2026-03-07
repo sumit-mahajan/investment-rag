@@ -9,7 +9,8 @@ import {
   formatEvaluationResults,
   meetsQualityThresholds,
   type EvaluationInput,
-} from "../lib/evaluation/ragas-evaluator";
+} from "../lib/evaluation";
+import { isFaithfulnessDetails, isPrecisionDetails } from "@/lib/types/evaluation";
 
 // ============================================================================
 // EXAMPLE 1: Single evaluation with all metrics
@@ -39,16 +40,18 @@ async function exampleSingleEvaluation() {
     console.log("Detailed Breakdown:");
     console.log("-".repeat(80));
     
-    if (result.evaluation_details.faithfulness_details) {
+    if (isFaithfulnessDetails(result.evaluation_details.faithfulness_details)) {
+      const fd = result.evaluation_details.faithfulness_details;
       console.log("\nFaithfulness Details:");
-      console.log(`  Total statements: ${result.evaluation_details.faithfulness_details.total_statements}`);
-      console.log(`  Supported: ${result.evaluation_details.faithfulness_details.supported_statements}`);
+      console.log(`  Total statements: ${fd.total_statements}`);
+      console.log(`  Supported: ${fd.supported_statements}`);
     }
-    
-    if (result.evaluation_details.precision_details) {
+
+    if (isPrecisionDetails(result.evaluation_details.precision_details)) {
+      const pd = result.evaluation_details.precision_details;
       console.log("\nContext Precision Details:");
-      console.log(`  Average relevance: ${(result.evaluation_details.precision_details.average_relevance * 100).toFixed(2)}%`);
-      console.log(`  Individual scores: ${result.evaluation_details.precision_details.relevance_scores.map((s: number) => (s * 100).toFixed(0) + '%').join(', ')}`);
+      console.log(`  Average relevance: ${(pd.average_relevance * 100).toFixed(2)}%`);
+      console.log(`  Individual scores: ${pd.relevance_scores.map((s: number) => (s * 100).toFixed(0) + "%").join(", ")}`);
     }
 
     // Check quality thresholds

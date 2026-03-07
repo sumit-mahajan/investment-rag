@@ -6,19 +6,9 @@ import { Button } from "@/components/ui/button";
 import { FileText, Trash2, ArrowRight, Clock, CheckCircle2, XCircle } from "lucide-react";
 import Link from "next/link";
 import { formatDate, formatFileSize } from "@/lib/utils";
+import type { DocumentListItem } from "@/lib/types";
 
-interface Document {
-  id: string;
-  originalName: string;
-  companyName?: string | null;
-  tickerSymbol?: string | null;
-  status: string;
-  fileSize: number;
-  totalChunks: number;
-  createdAt: Date;
-}
-
-export function DocumentList({ documents }: { documents: Document[] }) {
+export function DocumentList({ documents }: { documents: DocumentListItem[] }) {
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
 

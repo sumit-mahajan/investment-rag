@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db/client";
-import { documents, documentChunks } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { DocumentService } from "@/lib/services/document.service";
 import { handleError } from "@/lib/utils/errors";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const documentService = container.resolve(DocumentService);
+
   try {
     const { userId } = await auth();
 
@@ -18,25 +19,9 @@ export async function GET(
 
     const { id } = await params;
 
-    const [document] = await db
-      .select()
-      .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)));
+    const document = await documentService.getDocumentWithChunkCount(userId, id);
 
-    if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
-    }
-
-    // Get chunk count
-    const chunks = await db
-      .select()
-      .from(documentChunks)
-      .where(eq(documentChunks.documentId, id));
-
-    return NextResponse.json({
-      ...document,
-      chunkCount: chunks.length,
-    });
+    return NextResponse.json(document);
   } catch (error) {
     const errorResponse = handleError(error);
     return NextResponse.json(
@@ -50,6 +35,8 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const documentService = container.resolve(DocumentService);
+
   try {
     const { userId } = await auth();
 
@@ -59,20 +46,7 @@ export async function DELETE(
 
     const { id } = await params;
 
-    // Verify ownership
-    const [document] = await db
-      .select()
-      .from(documents)
-      .where(and(eq(documents.id, id), eq(documents.userId, userId)));
-
-    if (!document) {
-      return NextResponse.json({ error: "Document not found" }, { status: 404 });
-    }
-
-    // Delete from database (cascades to chunks)
-    await db.delete(documents).where(eq(documents.id, id));
-
-    // TODO: Delete from Pinecone and Vercel Blob
+    await documentService.deleteDocument(userId, id);
 
     return NextResponse.json({ message: "Document deleted successfully" });
   } catch (error) {

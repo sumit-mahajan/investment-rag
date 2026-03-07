@@ -1,5 +1,5 @@
 import { getIndex } from "./pinecone-client";
-import { SearchResult, HybridSearchResult } from "@/types/rag";
+import { SearchResult, HybridSearchResult } from "@/lib/types/rag";
 
 export interface VectorRecord {
   id: string;

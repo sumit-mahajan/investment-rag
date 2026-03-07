@@ -1,7 +1,7 @@
 import { ChatGroq } from "@langchain/groq";
 import { z } from "zod";
 import { AnalysisState } from "../financial-analyzer";
-import { CriterionAnalysis } from "@/types/analysis";
+import { CriterionAnalysis } from "@/lib/types/analysis";
 
 const criterionAnalysisSchema = z.object({
   score: z.number().min(0).max(1).describe("Analysis score from 0 to 1"),

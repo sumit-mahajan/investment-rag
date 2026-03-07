@@ -1,20 +1,27 @@
+/**
+ * Analysis workflow types
+ * Used by agents, config, and API
+ */
+
 export type AnalysisStatus = "pending" | "running" | "completed" | "failed";
 
 export type Verdict = "POSITIVE" | "NEGATIVE" | "NEUTRAL" | "MIXED";
 
-export interface AnalysisCriterion {
+/** Criteria definition (config) - what to analyze */
+export interface CriteriaConfig {
   id: string;
   name: string;
   description: string;
-  categories: string[]; // Content categories for filtering (financial-performance, risk-factors, etc.)
+  categories: string[];
   keyMetrics: string[];
   promptTemplate: string;
 }
 
+/** Result of analyzing one criterion */
 export interface CriterionAnalysis {
   criterionId: string;
   criterionName: string;
-  score: number; // 0-1
+  score: number;
   findings: string;
   evidence: ChunkEvidence[];
 }
@@ -27,7 +34,8 @@ export interface ChunkEvidence {
   relevanceScore: number;
 }
 
-export interface Analysis {
+/** Analysis workflow state (agent) */
+export interface AnalysisWorkflow {
   id: string;
   documentId: string;
   userId: string;

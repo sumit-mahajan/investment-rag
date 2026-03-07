@@ -1,3 +1,7 @@
+/**
+ * RAG (Retrieval-Augmented Generation) types
+ */
+
 export interface ChunkingConfig {
   strategy: "semantic" | "recursive" | "hybrid";
   chunkSize: number;
@@ -23,7 +27,7 @@ export interface RetrievalConfig {
   minSimilarityScore: number;
   useHybridSearch: boolean;
   useReranking: boolean;
-  mmrDiversity: number; // 0-1, higher = more diversity
+  mmrDiversity: number;
 }
 
 export interface RAGConfig {

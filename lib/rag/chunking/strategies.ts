@@ -1,5 +1,5 @@
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
-import { ChunkingConfig } from "@/types/rag";
+import { ChunkingConfig } from "@/lib/types/rag";
 import { hashContent } from "@/lib/utils";
 import { detectHeadings } from "@/lib/parsers/pdf-parser";
 

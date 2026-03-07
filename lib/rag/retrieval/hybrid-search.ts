@@ -4,7 +4,7 @@ import { ragConfig } from "@/config/rag.config";
 import { db } from "@/lib/db/client";
 import { documentChunks } from "@/lib/db/schema";
 import { eq, and, sql } from "drizzle-orm";
-import { HybridSearchResult } from "@/types/rag";
+import { HybridSearchResult } from "@/lib/types/rag";
 
 export interface SearchOptions {
   documentId: string;

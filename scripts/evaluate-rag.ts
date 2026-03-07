@@ -17,7 +17,8 @@ import {
   meetsQualityThresholds,
   type EvaluationInput,
   type DetailedEvaluation,
-} from '../lib/evaluation/ragas-evaluator';
+} from "../lib/evaluation";
+import { isFaithfulnessDetails, isPrecisionDetails, isCorrectnessDetails } from "@/lib/types/evaluation";
 
 // ============================================================================
 // CLI Argument Parsing
@@ -265,32 +266,32 @@ function displaySingleResult(result: DetailedEvaluation, verbose: boolean = fals
     console.log('DETAILED BREAKDOWN');
     console.log('='.repeat(80));
 
-    if (result.evaluation_details.faithfulness_details) {
+    if (isFaithfulnessDetails(result.evaluation_details.faithfulness_details)) {
       const fd = result.evaluation_details.faithfulness_details;
-      console.log('\n📊 Faithfulness:');
+      console.log("\n📊 Faithfulness:");
       console.log(`   ${fd.supported_statements}/${fd.total_statements} statements supported`);
       if (fd.statements) {
-        console.log('\n   Statements:');
+        console.log("\n   Statements:");
         fd.statements.forEach((stmt: string, i: number) => {
-          const icon = fd.verdicts[i] ? '✓' : '✗';
+          const icon = fd.verdicts[i] ? "✓" : "✗";
           console.log(`   ${icon} ${stmt}`);
         });
       }
     }
 
-    if (result.evaluation_details.precision_details) {
+    if (isPrecisionDetails(result.evaluation_details.precision_details)) {
       const pd = result.evaluation_details.precision_details;
-      console.log('\n📊 Context Precision:');
+      console.log("\n📊 Context Precision:");
       console.log(`   Average relevance: ${(pd.average_relevance * 100).toFixed(1)}%`);
-      console.log('\n   Context scores:');
+      console.log("\n   Context scores:");
       pd.relevance_scores.forEach((score: number, i: number) => {
         console.log(`   [${i + 1}] ${(score * 100).toFixed(1)}%`);
       });
     }
 
-    if (result.evaluation_details.correctness_details) {
+    if (isCorrectnessDetails(result.evaluation_details.correctness_details)) {
       const cd = result.evaluation_details.correctness_details;
-      console.log('\n📊 Correctness:');
+      console.log("\n📊 Correctness:");
       console.log(`   True Positives:  ${cd.tp}`);
       console.log(`   False Positives: ${cd.fp}`);
       console.log(`   False Negatives: ${cd.fn}`);

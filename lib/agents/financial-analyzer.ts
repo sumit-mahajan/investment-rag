@@ -1,6 +1,6 @@
 import { StateGraph } from "@langchain/langgraph";
-import { AnalysisCriterion, CriterionAnalysis, ChunkEvidence, Verdict } from "@/types/analysis";
-import { HybridSearchResult } from "@/types/rag";
+import { CriteriaConfig, CriterionAnalysis, ChunkEvidence, Verdict } from "@/lib/types/analysis";
+import { HybridSearchResult } from "@/lib/types/rag";
 import { retrieveNode } from "./nodes/retrieve";
 import { analyzeNode } from "./nodes/analyze";
 import { synthesizeNode } from "./nodes/synthesize";
@@ -8,7 +8,7 @@ import { synthesizeNode } from "./nodes/synthesize";
 export interface AnalysisState {
   documentId: string;
   userId: string;
-  criteria: AnalysisCriterion[];
+  criteria: CriteriaConfig[];
   retrievedChunks: HybridSearchResult[];
   analyses: CriterionAnalysis[];
   verdict?: Verdict;
@@ -49,7 +49,7 @@ export function createFinancialAnalyzerGraph() {
 export async function runFinancialAnalysis(
   documentId: string,
   userId: string,
-  criteria: AnalysisCriterion[]
+  criteria: CriteriaConfig[]
 ): Promise<AnalysisState> {
   const graph = createFinancialAnalyzerGraph();
 

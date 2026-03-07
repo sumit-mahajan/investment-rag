@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db/client";
-import { analyses, analysisCriteria } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { container } from "@/lib/di";
+import { AnalysisService } from "@/lib/services/analysis.service";
 import { handleError } from "@/lib/utils/errors";
 
 export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const analysisService = container.resolve(AnalysisService);
+
   try {
     const { userId } = await auth();
 
@@ -18,25 +19,9 @@ export async function GET(
 
     const { id } = await params;
 
-    const [analysis] = await db
-      .select()
-      .from(analyses)
-      .where(and(eq(analyses.id, id), eq(analyses.userId, userId)));
+    const analysis = await analysisService.getAnalysis(userId, id);
 
-    if (!analysis) {
-      return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
-    }
-
-    // Get criteria
-    const criteria = await db
-      .select()
-      .from(analysisCriteria)
-      .where(eq(analysisCriteria.analysisId, id));
-
-    return NextResponse.json({
-      ...analysis,
-      criteria,
-    });
+    return NextResponse.json(analysis);
   } catch (error) {
     const errorResponse = handleError(error);
     return NextResponse.json(

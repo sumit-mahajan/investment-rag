@@ -1,4 +1,4 @@
-import { RAGConfig } from "@/types/rag";
+import { RAGConfig } from "@/lib/types/rag";
 
 export const ragConfig: RAGConfig = {
   chunking: {

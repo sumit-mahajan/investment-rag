@@ -13,6 +13,14 @@
 
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { z } from "zod";
+import type {
+  RAGASMetrics,
+  EvaluationInput,
+  DetailedEvaluation,
+} from "@/lib/types/evaluation";
+
+// Re-export for consumers that import from this file
+export type { RAGASMetrics, EvaluationInput, DetailedEvaluation };
 
 // Initialize Gemini Flash 2.5
 const geminiModel = new ChatGoogleGenerativeAI({
@@ -59,39 +67,6 @@ const correctnessSchema = z.object({
   fn: z.number().describe("False negatives: ground truth statements missing in answer"),
   reasoning: z.string().describe("Detailed reasoning"),
 });
-
-// ============================================================================
-// EVALUATION INTERFACES
-// ============================================================================
-
-export interface RAGASMetrics {
-  faithfulness: number;
-  answer_relevancy: number;
-  context_precision: number;
-  context_recall: number;
-  answer_semantic_similarity: number;
-  answer_correctness: number;
-}
-
-export interface EvaluationInput {
-  question: string;
-  answer: string;
-  contexts: string[];
-  ground_truth?: string;
-}
-
-export interface DetailedEvaluation extends RAGASMetrics {
-  evaluation_details: {
-    faithfulness_details?: any;
-    relevancy_details?: any;
-    precision_details?: any;
-    recall_details?: any;
-    similarity_details?: any;
-    correctness_details?: any;
-  };
-  timestamp: string;
-  model_used: string;
-}
 
 // ============================================================================
 // FAITHFULNESS EVALUATION

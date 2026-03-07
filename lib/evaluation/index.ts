@@ -55,7 +55,7 @@ export type {
   MetricName,
   MetricValue,
   MetricScores,
-} from '../../types/evaluation';
+} from "@/lib/types/evaluation";
 
 // Re-export for convenience
 export { evaluateRAG } from './rag-metrics'; // Legacy evaluator

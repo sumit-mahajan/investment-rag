@@ -102,20 +102,20 @@ export function DocumentUploader() {
 
   return (
     <Card className="border-slate-200 bg-white shadow-sm">
-      <CardContent className="p-6">
+      <CardContent className="p-4 sm:p-6">
         {!file ? (
           <div className="space-y-4">
             <label
-              className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
+              className="flex flex-col items-center justify-center w-full h-36 sm:h-48 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer hover:border-blue-300 hover:bg-blue-50/50 transition-all group"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <div className="flex flex-col items-center justify-center space-y-3">
-                <div className="p-3 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors">
-                  <Upload className="w-6 h-6 text-blue-600" />
+              <div className="flex flex-col items-center justify-center space-y-2 sm:space-y-3 px-4">
+                <div className="p-2.5 sm:p-3 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                  <Upload className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-xs sm:text-sm font-medium text-slate-900">
                     <span className="text-blue-600">Click to upload</span> or drag and drop
                   </p>
                   <p className="text-xs text-slate-500 mt-1">PDF files only (MAX. 50MB)</p>
@@ -130,19 +130,19 @@ export function DocumentUploader() {
               />
             </label>
             {error && (
-              <div className="p-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
+              <div className="p-2.5 sm:p-3 text-xs sm:text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
                 {error}
               </div>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 p-4 border border-slate-200 rounded-xl bg-slate-50">
-              <div className="p-2 rounded-lg bg-blue-100">
-                <FileText className="w-5 h-5 text-blue-700" />
+          <div className="space-y-3 sm:space-y-4">
+            <div className="flex items-center gap-2.5 sm:gap-3 p-3 sm:p-4 border border-slate-200 rounded-xl bg-slate-50">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-blue-100">
+                <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-700" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-slate-900 truncate">{file.name}</p>
+                <p className="font-medium text-xs sm:text-sm text-slate-900 truncate">{file.name}</p>
                 <p className="text-xs text-slate-500">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
@@ -152,7 +152,7 @@ export function DocumentUploader() {
                   variant="ghost" 
                   size="sm" 
                   onClick={() => setFile(null)}
-                  className="shrink-0"
+                  className="shrink-0 h-8 w-8 p-0"
                 >
                   <X className="w-4 h-4" />
                 </Button>
@@ -160,23 +160,23 @@ export function DocumentUploader() {
             </div>
 
             {uploading && (
-              <div className="space-y-3">
-                <Progress value={progress} className="h-2" />
+              <div className="space-y-2 sm:space-y-3">
+                <Progress value={progress} className="h-1.5 sm:h-2" />
                 <div className="flex items-center justify-center gap-2">
                   {progress === 100 ? (
                     <>
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                      <p className="text-sm text-emerald-600 font-medium">Processing document...</p>
+                      <CheckCircle2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                      <p className="text-xs sm:text-sm text-emerald-600 font-medium">Processing document...</p>
                     </>
                   ) : (
-                    <p className="text-sm text-slate-600">Uploading... {progress}%</p>
+                    <p className="text-xs sm:text-sm text-slate-600">Uploading... {progress}%</p>
                   )}
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="p-3 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
+              <div className="p-2.5 sm:p-3 text-xs sm:text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg">
                 {error}
               </div>
             )}
@@ -184,7 +184,7 @@ export function DocumentUploader() {
             {!uploading && (
               <Button 
                 onClick={handleUpload} 
-                className="w-full bg-blue-600 hover:bg-blue-700"
+                className="w-full bg-blue-600 hover:bg-blue-700 text-sm h-9 sm:h-10"
               >
                 Upload and Process
               </Button>

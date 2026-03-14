@@ -78,10 +78,10 @@ export function AnalysisForm({ documentId }: AnalysisFormProps) {
   if (error) {
     return (
       <Card className="border-rose-200 bg-rose-50">
-        <CardContent className="py-6">
-          <p className="text-rose-700 font-medium mb-1">Analysis Failed</p>
-          <p className="text-sm text-rose-600">{error}</p>
-          <p className="text-sm text-slate-600 mt-2">
+        <CardContent className="py-4 sm:py-6 px-4 sm:px-6">
+          <p className="text-rose-700 font-medium text-sm sm:text-base mb-1">Analysis Failed</p>
+          <p className="text-xs sm:text-sm text-rose-600">{error}</p>
+          <p className="text-xs sm:text-sm text-slate-600 mt-2">
             You can try running the analysis again with different criteria.
           </p>
         </CardContent>
@@ -92,13 +92,13 @@ export function AnalysisForm({ documentId }: AnalysisFormProps) {
   if (isAnalyzing) {
     return (
       <Card className="border-blue-200 bg-blue-50/50">
-        <CardContent className="flex items-center justify-center py-12">
+        <CardContent className="flex items-center justify-center py-10 sm:py-12 px-4">
           <div className="text-center">
-            <div className="p-4 rounded-full bg-blue-100 inline-flex mb-4">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+            <div className="p-3 sm:p-4 rounded-full bg-blue-100 inline-flex mb-4">
+              <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-blue-600" />
             </div>
-            <p className="font-semibold text-slate-900 mb-2">Analyzing document...</p>
-            <p className="text-sm text-slate-600">This may take a few minutes</p>
+            <p className="font-semibold text-sm sm:text-base text-slate-900 mb-2">Analyzing document...</p>
+            <p className="text-xs sm:text-sm text-slate-600">This may take a few minutes</p>
           </div>
         </CardContent>
       </Card>

@@ -57,62 +57,64 @@ export function DocumentList({ documents }: { documents: DocumentListItem[] }) {
           key={doc.id} 
           className="border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 transition-all group"
         >
-          <CardContent className="p-5">
-            <div className="flex items-start justify-between gap-4">
+          <CardContent className="p-4 sm:p-5">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
               <div className="flex items-start gap-3 flex-1 min-w-0">
-                <div className="p-2.5 rounded-lg bg-blue-50 shrink-0">
-                  <FileText className="w-5 h-5 text-blue-600" />
+                <div className="p-2 sm:p-2.5 rounded-lg bg-blue-50 shrink-0">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-slate-900 truncate group-hover:text-blue-600 transition-colors">
+                  <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate group-hover:text-blue-600 transition-colors">
                     {doc.companyName || doc.originalName}
                   </h3>
                   {doc.companyName && (
-                    <p className="text-sm text-slate-500 truncate mt-0.5">
+                    <p className="text-xs sm:text-sm text-slate-500 truncate mt-0.5">
                       {doc.originalName}
                     </p>
                   )}
-                  <div className="flex items-center gap-3 mt-2 text-xs text-slate-500">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-slate-500">
                     <span>{formatFileSize(doc.fileSize)}</span>
-                    <span>•</span>
+                    <span className="hidden xs:inline">•</span>
                     <span>{doc.totalChunks} chunks</span>
-                    <span>•</span>
+                    <span className="hidden xs:inline">•</span>
                     <span>{formatDate(doc.createdAt)}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 shrink-0">
-                {doc.status === "completed" ? (
-                  <>
-                    <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100">
-                      <CheckCircle2 className="w-3 h-3 mr-1" />
-                      Ready
+              <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pl-9 sm:pl-0">
+                <div className="flex items-center gap-2">
+                  {doc.status === "completed" ? (
+                    <>
+                      <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-100 text-xs">
+                        <CheckCircle2 className="w-3 h-3 mr-1" />
+                        Ready
+                      </Badge>
+                      <Link href={`/analysis/${doc.id}`}>
+                        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-xs sm:text-sm h-8">
+                          Analyze
+                          <ArrowRight className="w-3 h-3 sm:w-3.5 sm:h-3.5 ml-1" />
+                        </Button>
+                      </Link>
+                    </>
+                  ) : doc.status === "processing" ? (
+                    <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-xs">
+                      <Clock className="w-3 h-3 mr-1 animate-spin" />
+                      Processing
                     </Badge>
-                    <Link href={`/analysis/${doc.id}`}>
-                      <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                        Analyze
-                        <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                      </Button>
-                    </Link>
-                  </>
-                ) : doc.status === "processing" ? (
-                  <Badge className="bg-amber-100 text-amber-700 border-amber-200">
-                    <Clock className="w-3 h-3 mr-1 animate-spin" />
-                    Processing
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive" className="bg-rose-100 text-rose-700 border-rose-200">
-                    <XCircle className="w-3 h-3 mr-1" />
-                    Failed
-                  </Badge>
-                )}
+                  ) : (
+                    <Badge variant="destructive" className="bg-rose-100 text-rose-700 border-rose-200 text-xs">
+                      <XCircle className="w-3 h-3 mr-1" />
+                      Failed
+                    </Badge>
+                  )}
+                </div>
                 <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={() => handleDelete(doc.id)}
                   disabled={deletingId === doc.id}
-                  className="text-slate-400 hover:text-rose-600 hover:bg-rose-50"
+                  className="text-slate-400 hover:text-rose-600 hover:bg-rose-50 h-8 w-8 p-0"
                 >
                   {deletingId === doc.id ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

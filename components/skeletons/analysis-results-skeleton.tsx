@@ -7,12 +7,12 @@ export function AnalysisResultsSkeleton() {
       {/* Overall verdict skeleton */}
       <Card className="border-slate-200 bg-white shadow-sm">
         <CardContent className="pt-6">
-          <div className="flex items-start justify-between mb-4">
-            <div className="space-y-2 flex-1">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+            <div className="space-y-2 flex-1 min-w-0">
               <div className="h-6 bg-slate-200 rounded animate-pulse w-32" />
-              <div className="h-8 bg-slate-300 rounded animate-pulse w-48" />
+              <div className="h-8 bg-slate-300 rounded animate-pulse w-48 max-w-full" />
             </div>
-            <div className="h-8 w-24 bg-slate-200 rounded-full animate-pulse" />
+            <div className="h-8 w-24 bg-slate-200 rounded-full animate-pulse shrink-0" />
           </div>
           <div className="space-y-2">
             <div className="h-4 bg-slate-100 rounded animate-pulse w-full" />
@@ -28,9 +28,9 @@ export function AnalysisResultsSkeleton() {
         {[1, 2, 3, 4].map((i) => (
           <Card key={i} className="border-slate-200 bg-white">
             <CardContent className="pt-5">
-              <div className="flex items-start justify-between mb-3">
-                <div className="h-5 bg-slate-200 rounded animate-pulse w-40" />
-                <div className="h-6 w-12 bg-slate-200 rounded animate-pulse" />
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
+                <div className="h-5 bg-slate-200 rounded animate-pulse w-40 max-w-full" />
+                <div className="h-6 w-12 bg-slate-200 rounded animate-pulse shrink-0" />
               </div>
               <Separator className="my-3" />
               <div className="space-y-2">

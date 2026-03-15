@@ -6,8 +6,8 @@ export default function AnalysesLoading() {
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Header skeleton */}
       <div>
-        <div className="h-9 bg-slate-200 rounded animate-pulse w-32 mb-2" />
-        <div className="h-5 bg-slate-100 rounded animate-pulse w-64" />
+        <div className="h-9 bg-slate-200 rounded animate-pulse w-32 max-w-full mb-2" />
+        <div className="h-5 bg-slate-100 rounded animate-pulse w-64 max-w-full" />
       </div>
 
       {/* Stats cards skeleton */}

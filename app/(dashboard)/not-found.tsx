@@ -18,8 +18,8 @@ export default function DashboardNotFound() {
                 Resource Not Found
               </h2>
               <p className="text-slate-600">
-                The document or analysis you're looking for doesn't exist, or you
-                don't have permission to access it.
+                The document or analysis you are looking for does not exist, or you
+                do not have permission to access it.
               </p>
             </div>
             <div className="flex gap-3 w-full pt-3">

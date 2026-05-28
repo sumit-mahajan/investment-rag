@@ -30,7 +30,7 @@ export default function AnalysisError({
                 Analysis Error
               </h2>
               <p className="text-slate-600">
-                We couldn't load this analysis page. The document might not exist or
+                We could not load this analysis page. The document might not exist or
                 there was a problem processing your request.
               </p>
             </div>

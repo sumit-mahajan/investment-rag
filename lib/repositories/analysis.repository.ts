@@ -1,5 +1,5 @@
 import { injectable } from "tsyringe";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, sql, count } from "drizzle-orm";
 import { analyses, type AnalysisDocumentRef } from "@/lib/db/schema";
 import { BaseRepository, type Transaction } from "./base.repository";
 import type { CreateAnalysisDTO, AnalysisFiltersDTO } from "@/lib/types/dtos";
@@ -61,15 +61,37 @@ export class AnalysisRepository extends BaseRepository {
     _filters?: AnalysisFiltersDTO,
     tx?: Transaction
   ): Promise<Analysis[]> {
-    return this.execute("Find analyses by user ID", async () => {
+    return this.findSummariesByUserId(userId, undefined, tx);
+  }
+
+  /** List view — omits large `result` JSON payloads */
+  async findSummariesByUserId(
+    userId: string,
+    limit?: number,
+    tx?: Transaction
+  ): Promise<Analysis[]> {
+    return this.execute("Find analysis summaries by user ID", async () => {
       const client = this.getClient(tx);
-      const rows = await client
-        .select()
+      let query = client
+        .select({
+          id: analyses.id,
+          userId: analyses.userId,
+          documents: analyses.documents,
+          traceUrl: analyses.traceUrl,
+          createdAt: analyses.createdAt,
+          hasResult: sql<boolean>`${analyses.result} is not null`,
+        })
         .from(analyses)
         .where(eq(analyses.userId, userId))
-        .orderBy(desc(analyses.createdAt));
+        .orderBy(desc(analyses.createdAt))
+        .$dynamic();
 
-      return rows.map((row) => this.toAnalysis(row));
+      if (limit != null) {
+        query = query.limit(limit);
+      }
+
+      const rows = await query;
+      return rows.map((row) => this.toAnalysisSummary(row));
     });
   }
 
@@ -103,9 +125,40 @@ export class AnalysisRepository extends BaseRepository {
 
   async countByUserId(userId: string, tx?: Transaction): Promise<number> {
     return this.execute("Count analyses by user", async () => {
-      const rows = await this.findByUserId(userId, undefined, tx);
-      return rows.length;
+      const client = this.getClient(tx);
+      const [row] = await client
+        .select({ count: count() })
+        .from(analyses)
+        .where(eq(analyses.userId, userId));
+
+      return row?.count ?? 0;
     });
+  }
+
+  private toAnalysisSummary(row: {
+    id: string;
+    userId: string;
+    documents: AnalysisDocumentRef[] | null;
+    traceUrl: string | null;
+    createdAt: Date;
+    hasResult: boolean;
+  }): Analysis {
+    const docs = (row.documents ?? []) as AnalysisDocumentRef[];
+    return {
+      id: row.id,
+      userId: row.userId,
+      documents: docs,
+      result: null,
+      traceUrl: row.traceUrl,
+      createdAt: row.createdAt,
+      status: row.hasResult ? "completed" : "running",
+      fileIds: docs.map((d) => d.fileId),
+      documentCount: docs.length,
+      label:
+        docs.length > 1
+          ? `Multi-Doc (${docs.length})`
+          : (docs[0]?.fileName ?? "Analysis"),
+    };
   }
 
   private toAnalysis(row: typeof analyses.$inferSelect): Analysis {

@@ -1,0 +1,57 @@
+---
+description: TypeScript conventions for this codebase
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# TypeScript conventions
+
+## Types first
+
+All domain types live in `lib/types/core.ts`. Define interfaces there before writing implementations. Every function signature uses these types. No `any` for domain concepts.
+
+Core types: `ChunkMetadata`, `Citation`, `Metric`, `InvestmentAnalysis`, `AnalysisState`, `ExtractedMetric`, `RetrievedChunk`.
+
+## Naming
+
+- **Files:** kebab-case (`analysis.service.ts`, `retrieve.ts`)
+- **Interfaces/types:** PascalCase (`InvestmentAnalysis`, `ChunkMetadata`)
+- **Functions:** camelCase, verb-first (`ingestDocument`, `retrieveChunks`, `embedChunks`)
+- **Path alias:** `@/` → project root
+
+## DI (tsyringe)
+
+Services and repositories use `@injectable()`. Resolve via `container.resolve(X)` in API routes and server components. Register in `lib/di/setup.ts`.
+
+Plain async functions: `lib/ingestion/` and `lib/retrieval/` — no DI, no classes.
+
+## Async patterns
+
+- Await everything in the request path.
+- Background work (ingestion after upload): `.catch(err => console.error(err))` — the only fire-and-forget permitted.
+- Atomic DB writes: `withTransaction` from `lib/repositories/base.repository.ts`. Only needed for `analyses` and `conversations`.
+
+## Error handling
+
+- Throw domain error subclasses from `lib/errors/domain-errors.ts`.
+- API routes: `handleError(error)` → `{ message, statusCode }`.
+- Server actions: return `{ success: true, data } | { success: false, error: string }`.
+- Zod at every API boundary.
+
+## No `any`
+
+- LLM outputs: use Zod `withStructuredOutput`.
+- Pinecone metadata: cast through `ChunkMetadata`.
+- DB jsonb columns (`analyses.result`, `analyses.documents`, `conversations.messages`): define typed interfaces and cast at the boundary with `as`.
+- `(workflow as any).addEdge("__start__", ...)` — single allowed exception, LangGraph v0.2 API requirement.
+
+## React / Next.js
+
+- Server Components by default; `"use client"` only for interactivity.
+- `params`/`searchParams` are `Promise<...>` in Next 15 — always `await` them.
+- `export const dynamic = "force-dynamic"` on all authenticated dashboard pages.
+- Toasts: `sonner`. Auth: `@clerk/nextjs` (`auth()` server, `useAuth()` client).
+
+## Comments
+
+Only for non-obvious constraints. Never narrate what code does.

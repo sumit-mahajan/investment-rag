@@ -1,0 +1,596 @@
+{
+  "individual_results": [
+    {
+      "faithfulness": 0.2222222222222222,
+      "answer_relevancy": 0.7,
+      "context_precision": 0.9363083088674373,
+      "context_recall": 0,
+      "answer_semantic_similarity": 0,
+      "answer_correctness": 0,
+      "evaluation_details": {
+        "faithfulness_details": {
+          "total_statements": 9,
+          "supported_statements": 2,
+          "statements": [
+            "The company has a stable operating margin of 18.7%.",
+            "The company has a zero debt-equity ratio.",
+            "Revenue growth is slow at 4.7% YoY.",
+            "Key risks include geo-political changes.",
+            "Key risks include supply chain constraints.",
+            "The company has diverse segmental revenues.",
+            "Key risks include talent availability.",
+            "Key risks include technology disruption.",
+            "Key risks include cybersecurity."
+          ],
+          "verdicts": [
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            true,
+            false
+          ],
+          "reasoning": [
+            "The context does not provide information about the company's operating margin or any specific financial figures.",
+            "The context does not provide information about the company's debt-equity ratio or any financial ratios.",
+            "The context does not provide information about the company's revenue growth rate or any specific percentage.",
+            "The context explicitly lists \"Geo-political, macroeconomic or health events\" as a key/emerging risk.",
+            "The context does not list \"supply chain constraints\" as a key or emerging risk.",
+            "The context does not provide information about the company's segmental revenues or their diversity.",
+            "The context does not explicitly list \"talent availability\" as a key or emerging risk.",
+            "The context explicitly lists \"Technology disruption and innovation\" as a key/emerging risk.",
+            "The context does not explicitly list \"cybersecurity\" as a key or emerging risk."
+          ]
+        },
+        "relevancy_details": {
+          "reasoning": "The answer provides relevant information regarding key financial metrics (operating margin, debt-equity ratio, revenue growth) and material risks (geo-political changes, supply chain, talent, technology, cybersecurity). These directly address parts of the question. It also includes positive and negative points that could form the basis of a bull and bear case. However, it fails to present a distinct, structured 'bull case' and 'bear case' as explicitly requested in the prompt for a 'structured investment analysis'. The information is presented in a somewhat unstructured list, and there is some redundancy in listing risks. While the content is largely pertinent, the lack of the requested structure for the bull and bear cases prevents a higher score."
+        },
+        "precision_details": {
+          "relevance_scores": [
+            1,
+            1,
+            1,
+            0.6,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0.7,
+            0.5,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1
+          ],
+          "reasoning": [
+            "This context directly lists several 'Key / Emerging risks' (contractual liabilities, regulatory environment) with their impacts and mitigation strategies, which are crucial for identifying material risks and informing the bear case.",
+            "This context directly lists several 'Key / Emerging risks' (geo-political, commoditization, technology disruption) with their impacts and mitigation strategies, which are crucial for identifying material risks and informing the bear case. It also mentions opportunities relevant to the bull case.",
+            "This context directly lists several 'Key / Emerging risks' (talent, cybersecurity, data protection, cost inflation, ESG) with their impacts and mitigation strategies, which are crucial for identifying material risks and informing the bear case. It also mentions opportunities relevant to the bull case.",
+            "This context provides a high-level categorization of risks (Strategy, Operational, Legal and compliance). While it doesn't list specific risks or financial metrics, it offers a useful framework for structuring the 'material risks' section of the investment analysis.",
+            "This context provides a table with key financial metrics such as Market capitalization to revenues, Price / Earnings, Days Sales Outstanding, Cash and investment as a % of total assets, Revenue growth, Operating margin, Net profit margin, and Basic EPS, directly addressing 'key financial metrics'.",
+            "This context provides a table with numerous key financial ratios including Current ratio, Debt – Equity ratio, Return on Equity (ROE), Return on Capital Employed (ROCE), and various turnover ratios, directly addressing 'key financial metrics'.",
+            "This context provides the 'Return on net worth (%)' for two years, which is a key financial metric relevant to the investment analysis.",
+            "This context identifies specific material risks (data privacy and information management) and opportunities (industry leadership in information security), directly contributing to the 'material risks' and 'bull case' sections.",
+            "This context provides projected 'Long-term growth rate' and 'Operating margins', which are key financial metrics and crucial for developing bull and bear cases.",
+            "This context introduces the 'Risk management report' and broadly mentions several key risks (geo-political, economy, supply chain, talent, technology, cybersecurity), reinforcing the 'material risks' section and providing important context for an investment analysis.",
+            "This context provides detailed 'Segmental revenues' and 'Segmental operating income/margin' by industry, which are key financial metrics. This data can inform growth drivers (bull case) and areas of concern (bear case).",
+            "This context discusses 'forward-looking statements' and the inherent risks and uncertainties that could cause actual results to differ. This is important contextual information for an investment analysis, particularly when discussing bull and bear cases.",
+            "This context presents a balance sheet with various asset categories. While not directly 'key financial metrics' in the sense of ratios or performance indicators, it provides fundamental financial data from the uploaded documents, which is part of a comprehensive financial analysis.",
+            "This context identifies 'Environment: Climate change' as a material risk with potential negative financial implications, directly contributing to the 'material risks' section.",
+            "This context discusses the company's strategy, opportunities (AI era), strengths (AI-first strategy), and competition. This information is highly relevant for constructing both the 'bull case' (opportunities, strengths) and 'bear case' (competition, threats).",
+            "This context contains a table with years and values but lacks any labels or descriptions for what the values represent, making it impossible to use for an investment analysis.",
+            "This context provides 'Revenue from top five customers' and 'Revenue from top ten customers', which are key financial metrics indicating customer concentration and potential risk, relevant for both 'key financial metrics' and 'material risks'.",
+            "This context provides industry structure and developments, highlighting global economic trends, IT spending, and the shift towards AI/gen AI. It identifies opportunities (AI leadership) for the bull case and economic uncertainty for the bear case.",
+            "This context provides revenue distribution by region, which is a key financial metric. This data can inform geographical diversification (bull case) or concentration risks (bear case)."
+          ],
+          "average_relevance": 0.8842105263157893
+        },
+        "recall_details": {
+          "message": "Ground truth not provided"
+        },
+        "similarity_details": {
+          "message": "Ground truth not provided"
+        },
+        "correctness_details": {
+          "message": "Ground truth not provided"
+        }
+      },
+      "timestamp": "2026-05-28T15:44:24.504Z",
+      "model_used": "gemini-2.5-flash"
+    },
+    {
+      "faithfulness": 0.2,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.9363083088674373,
+      "context_recall": 0,
+      "answer_semantic_similarity": 0,
+      "answer_correctness": 0,
+      "evaluation_details": {
+        "faithfulness_details": {
+          "total_statements": 10,
+          "supported_statements": 2,
+          "statements": [
+            "The company has a strong operating margin of 18.7%.",
+            "The company has a debt-equity ratio of 0.0.",
+            "Revenue growth is slow at 4.7% YoY.",
+            "Forward guidance is not found.",
+            "Key risks include geo-political changes.",
+            "Key risks include supply chain constraints.",
+            "Key risks include cybersecurity risks.",
+            "Free Cash Flow is $21,570M.",
+            "Talent availability is a key risk.",
+            "Technology disruption is a key risk."
+          ],
+          "verdicts": [
+            false,
+            false,
+            false,
+            false,
+            true,
+            false,
+            false,
+            false,
+            false,
+            true
+          ],
+          "reasoning": [
+            "The context does not provide financial metrics such as operating margin.",
+            "The context does not provide financial metrics such as debt-equity ratio.",
+            "The context does not provide financial metrics such as revenue growth.",
+            "The context does not mention anything about forward guidance.",
+            "The context explicitly lists \"Geo-political, macroeconomic or health events\" as a key risk.",
+            "The context does not list \"supply chain constraints\" as a key or emerging risk.",
+            "The context does not list \"cybersecurity risks\" as a key or emerging risk.",
+            "The context does not provide information on Free Cash Flow.",
+            "The context does not explicitly list \"Talent availability\" as a key or emerging risk.",
+            "The context explicitly lists \"Technology disruption and innovation\" as a key risk."
+          ]
+        },
+        "relevancy_details": {
+          "reasoning": "The answer provides some key financial metrics (operating margin, debt-equity ratio, FCF, revenue growth) and lists several material risks (geo-political, supply chain, cybersecurity, talent, technology disruption). However, it completely misses two crucial components of the requested structured investment analysis: the bull case and the bear case. Additionally, while it provides information, it lacks the 'structured' aspect of an analysis, presenting more of a bulleted list of observations and risks rather than a cohesive analysis. The repetition of some risks also detracts from its quality."
+        },
+        "precision_details": {
+          "relevance_scores": [
+            1,
+            1,
+            1,
+            0.6,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0.7,
+            0.5,
+            1,
+            1,
+            0,
+            1,
+            1,
+            1
+          ],
+          "reasoning": [
+            "This context directly lists several 'Key / Emerging risks' (contractual liabilities, regulatory environment) with their impacts and mitigation strategies, which are crucial for identifying material risks and informing the bear case.",
+            "This context directly lists several 'Key / Emerging risks' (geo-political, commoditization, technology disruption) with their impacts and mitigation strategies, which are crucial for identifying material risks and informing the bear case. It also mentions opportunities relevant to the bull case.",
+            "This context directly lists several 'Key / Emerging risks' (talent, cybersecurity, data protection, cost inflation, ESG) with their impacts and mitigation strategies, which are crucial for identifying material risks and informing the bear case. It also mentions opportunities relevant to the bull case.",
+            "This context provides a high-level categorization of risks (Strategy, Operational, Legal and compliance). While it doesn't list specific risks or financial metrics, it offers a useful framework for structuring the 'material risks' section of the investment analysis.",
+            "This context provides a table with key financial metrics such as Market capitalization to revenues, Price / Earnings, Days Sales Outstanding, Cash and investment as a % of total assets, Revenue growth, Operating margin, Net profit margin, and Basic EPS, directly addressing 'key financial metrics'.",
+            "This context provides a table with numerous key financial ratios including Current ratio, Debt – Equity ratio, Return on Equity (ROE), Return on Capital Employed (ROCE), and various turnover ratios, directly addressing 'key financial metrics'.",
+            "This context provides the 'Return on net worth (%)' for two years, which is a key financial metric relevant to the investment analysis.",
+            "This context identifies specific material risks (data privacy and information management) and opportunities (industry leadership in information security), directly contributing to the 'material risks' and 'bull case' sections.",
+            "This context provides projected 'Long-term growth rate' and 'Operating margins', which are key financial metrics and crucial for developing bull and bear cases.",
+            "This context introduces the 'Risk management report' and broadly mentions several key risks (geo-political, economy, supply chain, talent, technology, cybersecurity), reinforcing the 'material risks' section and providing important context for an investment analysis.",
+            "This context provides detailed 'Segmental revenues' and 'Segmental operating income/margin' by industry, which are key financial metrics. This data can inform growth drivers (bull case) and areas of concern (bear case).",
+            "This context discusses 'forward-looking statements' and the inherent risks and uncertainties that could cause actual results to differ. This is important contextual information for an investment analysis, particularly when discussing bull and bear cases.",
+            "This context presents a balance sheet with various asset categories. While not directly 'key financial metrics' in the sense of ratios or performance indicators, it provides fundamental financial data from the uploaded documents, which is part of a comprehensive financial analysis.",
+            "This context identifies 'Environment: Climate change' as a material risk with potential negative financial implications, directly contributing to the 'material risks' section.",
+            "This context discusses the company's strategy, opportunities (AI era), strengths (AI-first strategy), and competition. This information is highly relevant for constructing both the 'bull case' (opportunities, strengths) and 'bear case' (competition, threats).",
+            "This context contains a table with years and values but lacks any labels or descriptions for what the values represent, making it impossible to use for an investment analysis.",
+            "This context provides 'Revenue from top five customers' and 'Revenue from top ten customers', which are key financial metrics indicating customer concentration and potential risk, relevant for both 'key financial metrics' and 'material risks'.",
+            "This context provides industry structure and developments, highlighting global economic trends, IT spending, and the shift towards AI/gen AI. It identifies opportunities (AI leadership) for the bull case and economic uncertainty for the bear case.",
+            "This context provides revenue distribution by region, which is a key financial metric. This data can inform geographical diversification (bull case) or concentration risks (bear case)."
+          ],
+          "average_relevance": 0.8842105263157893
+        },
+        "recall_details": {
+          "message": "Ground truth not provided"
+        },
+        "similarity_details": {
+          "message": "Ground truth not provided"
+        },
+        "correctness_details": {
+          "message": "Ground truth not provided"
+        }
+      },
+      "timestamp": "2026-05-28T15:44:24.215Z",
+      "model_used": "gemini-2.5-flash"
+    },
+    {
+      "faithfulness": 0.5,
+      "answer_relevancy": 0.5,
+      "context_precision": 0.9687125349760264,
+      "context_recall": 0,
+      "answer_semantic_similarity": 0,
+      "answer_correctness": 0,
+      "evaluation_details": {
+        "faithfulness_details": {
+          "total_statements": 10,
+          "supported_statements": 5,
+          "statements": [
+            "The company has strong revenue growth of 15.7% YoY and a high operating margin of 34.7%.",
+            "Missing forward guidance is a concern.",
+            "The company has strong free cash flow of $43.0 billion.",
+            "The company is investing in AI initiatives.",
+            "The company has diversified revenue streams.",
+            "Regulatory risks and potential lawsuits are concerns.",
+            "The company has a dependence on advertising revenue.",
+            "The company faces competition from other tech companies.",
+            "Potential data breaches are a risk.",
+            "Global economic uncertainty is a risk."
+          ],
+          "verdicts": [
+            false,
+            false,
+            false,
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "reasoning": [
+            "The context does not provide the 15.7% YoY revenue growth and states the operating margin as 35% for 2023, not 34.7%.",
+            "The context mentions forward-looking statements but does not identify 'missing forward guidance' as a specific concern or risk.",
+            "The context does not provide any information about free cash flow or a specific amount of $43.0 billion.",
+            "The context does not mention any investments in 'AI initiatives'.",
+            "The context primarily discusses risks related to advertising and does not provide evidence of diversified revenue streams.",
+            "The context explicitly lists 'Risks Related to Government Regulation and Enforcement' and 'litigation, including class action lawsuits' as risks.",
+            "The context lists risks related to 'loss of, or reduction in spending by, our marketers' and 'ad targeting and measurement tools,' indicating reliance on advertising.",
+            "The context lists 'our ability to compete effectively' as a risk, implying the existence of competition.",
+            "The context lists 'breaches of security or privacy, and the costs associated with any such breaches and remediation' as a risk.",
+            "The context mentions 'significant volatility and disruption of global financial markets' and 'geopolitical events' as risks, which contribute to global economic uncertainty."
+          ]
+        },
+        "relevancy_details": {
+          "reasoning": "The answer provides some relevant information, including specific financial metrics (revenue growth, operating margin, free cash flow) and a list of material risks. It also touches upon elements that could form a bull case (strong growth, AI initiatives, diversified revenue) and a bear case (missing guidance, regulatory risks, dependence on advertising, competition, data breaches, economic uncertainty). However, it significantly fails on the 'structured investment analysis' requirement, presenting the information as a disorganized list of bullet points rather than distinct, well-articulated sections for bull case, bear case, and risks. There is also considerable repetition of risks. Furthermore, while it provides data points, it doesn't explicitly demonstrate an analysis of 'uploaded financial documents' as requested by the question, merely stating facts that could be derived from them."
+        },
+        "precision_details": {
+          "relevance_scores": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0.1,
+            1,
+            0.9,
+            0.5,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "reasoning": [
+            "This context directly lists various material risks related to product offerings, business operations, and government regulation, which are crucial for a structured investment analysis's 'material risks' and 'bear case' sections.",
+            "This context continues to list material risks, including those related to moderation, data protection, competition, global operations, tax, and geopolitical events, directly contributing to the 'material risks' and 'bear case' sections.",
+            "This context discusses the challenging litigation and regulatory environment, which is a significant material risk for the investment analysis.",
+            "This context provides further details on the potential adverse outcomes of litigation and exposure to greater tax liabilities, both of which are material risks.",
+            "This context elaborates on the potential negative impacts of lawsuits and claims, including substantial monetary damages or fines and changes to business practices, directly contributing to the 'material risks' and 'bear case'.",
+            "This context lists various costs and expenses, including those related to product development, gross/operating margins, acquisitions, infrastructure, security breaches, and litigation. These are key financial metrics and also represent operational/financial risks.",
+            "This context details risks related to technical infrastructure, foreign government actions impacting infrastructure, and inaccuracies in community metrics, all of which are material operational risks.",
+            "This context provides specific details about regulatory actions (FTC, COPPA) and their potential severe impacts, including significant limitations on business practices and substantial penalties, making it highly relevant for 'material risks' and 'bear case'.",
+            "This context provides a percentage-based income statement (Revenue, Costs, Income from operations, Net income) for three years, which are essential 'key financial metrics' for an investment analysis.",
+            "This context lists additional material risks such as user base volatility, product development delays, market volatility, and employee illness. It also highlights investments in Reality Labs as a factor reducing operating margin and profitability, which is relevant for both 'bear case' and 'key financial metrics'.",
+            "This context specifically identifies 'Equity Price Risk' for non-marketable equity securities, which is a direct material financial risk.",
+            "This context is a general disclaimer about forward-looking statements and the inherent risks and uncertainties. While it mentions risks, it does not provide specific content for the investment analysis itself, making it minimally relevant.",
+            "This context provides absolute values for 'Income before provision for income taxes' broken down by domestic and foreign sources for three years, which are crucial 'key financial metrics'.",
+            "This context discusses the company's investment philosophy, focus on operating efficiency, and allocation of expenses between FoA and Reality Labs, including significant investments in AI. This information is valuable for both 'bull case' (AI initiatives) and 'bear case' (RL investments impacting margins) and overall strategic analysis.",
+            "This context mentions competitive threats as a factor that could negatively affect business and financial results, which is a material risk.",
+            "This context provides 'Daily Active People (DAP)' and 'Monthly Active People (MAP)' metrics over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides absolute values for 'Family Daily Active People (DAP)' and 'Family Monthly Active People (MAP)' over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides absolute values for 'Daily Active Users (DAU)' and 'Monthly Active Users (MAU)' over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides 'Marketing and sales' expenses in absolute values and as a percentage of revenue for three years, which are important 'key financial metrics' for cost structure analysis.",
+            "This context discusses challenges to advertising revenue due to reduced data signals and legislative/regulatory/platform developments. This is a significant material risk and directly impacts the 'bear case' for revenue generation.",
+            "This context provides absolute values for 'Research and development', 'Marketing and sales', and 'General and administrative' expenses, specifically related to share-based compensation, which are important 'key financial metrics'.",
+            "This context provides absolute values for 'Cost of revenue', 'Research and development', 'Marketing and sales', 'General and administrative', and 'Total share-based compensation expense' for three years, which are crucial 'key financial metrics' for cost structure analysis."
+          ],
+          "average_relevance": 0.9318181818181818
+        },
+        "recall_details": {
+          "message": "Ground truth not provided"
+        },
+        "similarity_details": {
+          "message": "Ground truth not provided"
+        },
+        "correctness_details": {
+          "message": "Ground truth not provided"
+        }
+      },
+      "timestamp": "2026-05-28T15:45:10.930Z",
+      "model_used": "gemini-2.5-flash"
+    },
+    {
+      "faithfulness": 0.6666666666666666,
+      "answer_relevancy": 0.4,
+      "context_precision": 0.9687125349760264,
+      "context_recall": 0,
+      "answer_semantic_similarity": 0,
+      "answer_correctness": 0,
+      "evaluation_details": {
+        "faithfulness_details": {
+          "total_statements": 12,
+          "supported_statements": 8,
+          "statements": [
+            "Net income is $39,098.",
+            "Free cash flow is $43,010.",
+            "Revenue and operating margin data are missing from the context.",
+            "Significant regulatory risks are present.",
+            "Significant litigation risks are present.",
+            "Investments in AI initiatives are a factor.",
+            "Volatility in user base and engagement is a risk.",
+            "Regulatory actions pose a risk.",
+            "Litigation outcomes are a risk.",
+            "Volatility in global financial markets is a risk.",
+            "Breaches of security or privacy are a risk.",
+            "Geopolitical events are a risk."
+          ],
+          "verdicts": [
+            false,
+            false,
+            false,
+            true,
+            true,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "reasoning": [
+            "The context provides net income as a percentage (29%) for 2023, not a specific dollar amount of $39,098.",
+            "The context does not contain any information about \"free cash flow\" or the specific dollar amount of $43,010.",
+            "The context explicitly provides revenue data (100%) and income from operations (35%), which is related to operating margin, in the financial table.",
+            "The context explicitly lists \"Risks Related to Government Regulation and Enforcement\" and discusses various regulatory challenges.",
+            "The context explicitly lists \"litigation, including class action lawsuits\" as a risk and discusses potential adverse outcomes.",
+            "The context mentions investments in \"Reality Labs\" but does not specifically refer to \"AI initiatives.\"",
+            "The context explicitly lists \"volatility in the size of our user base and user engagement\" as a risk.",
+            "The context discusses \"inquiries or enforcement actions initiated by government or regulatory authorities\" and their potential adverse effects.",
+            "The context discusses the uncertainty and potential negative consequences of \"litigation outcomes,\" including substantial monetary damages or fines.",
+            "The context explicitly lists \"significant volatility and disruption of global financial markets\" as a risk.",
+            "The context explicitly lists \"breaches of security or privacy\" as a risk.",
+            "The context explicitly lists \"geopolitical events affecting us, our marketers or our industry\" as a risk."
+          ]
+        },
+        "relevancy_details": {
+          "reasoning": "The answer provides some relevant information, specifically listing a few key financial metrics (net income, free cash flow) and several material risks. However, it completely fails to provide a 'bull case' or 'bear case' as explicitly requested in the question. Furthermore, the answer lacks the 'structured investment analysis' format, presenting information as a list of points rather than an organized analysis. While it touches on two out of four requested components (financial metrics and risks), it does so minimally and without the requested structure or depth, and completely omits the other two critical components."
+        },
+        "precision_details": {
+          "relevance_scores": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0.1,
+            1,
+            0.9,
+            0.5,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "reasoning": [
+            "This context directly lists various material risks related to product offerings, business operations, and government regulation, which are crucial for a structured investment analysis's 'material risks' and 'bear case' sections.",
+            "This context continues to list material risks, including those related to moderation, data protection, competition, global operations, tax, and geopolitical events, directly contributing to the 'material risks' and 'bear case' sections.",
+            "This context discusses the challenging litigation and regulatory environment, which is a significant material risk for the investment analysis.",
+            "This context provides further details on the potential adverse outcomes of litigation and exposure to greater tax liabilities, both of which are material risks.",
+            "This context elaborates on the potential negative impacts of lawsuits and claims, including substantial monetary damages or fines and changes to business practices, directly contributing to the 'material risks' and 'bear case'.",
+            "This context lists various costs and expenses, including those related to product development, gross/operating margins, acquisitions, infrastructure, security breaches, and litigation. These are key financial metrics and also represent operational/financial risks.",
+            "This context details risks related to technical infrastructure, foreign government actions impacting infrastructure, and inaccuracies in community metrics, all of which are material operational risks.",
+            "This context provides specific details about regulatory actions (FTC, COPPA) and their potential severe impacts, including significant limitations on business practices and substantial penalties, making it highly relevant for 'material risks' and 'bear case'.",
+            "This context provides a percentage-based income statement (Revenue, Costs, Income from operations, Net income) for three years, which are essential 'key financial metrics' for an investment analysis.",
+            "This context lists additional material risks such as user base volatility, product development delays, market volatility, and employee illness. It also highlights investments in Reality Labs as a factor reducing operating margin and profitability, which is relevant for both 'bear case' and 'key financial metrics'.",
+            "This context specifically identifies 'Equity Price Risk' for non-marketable equity securities, which is a direct material financial risk.",
+            "This context is a general disclaimer about forward-looking statements and the inherent risks and uncertainties. While it mentions risks, it does not provide specific content for the investment analysis itself, making it minimally relevant.",
+            "This context provides absolute values for 'Income before provision for income taxes' broken down by domestic and foreign sources for three years, which are crucial 'key financial metrics'.",
+            "This context discusses the company's investment philosophy, focus on operating efficiency, and allocation of expenses between FoA and Reality Labs, including significant investments in AI. This information is valuable for both 'bull case' (AI initiatives) and 'bear case' (RL investments impacting margins) and overall strategic analysis.",
+            "This context mentions competitive threats as a factor that could negatively affect business and financial results, which is a material risk.",
+            "This context provides 'Daily Active People (DAP)' and 'Monthly Active People (MAP)' metrics over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides absolute values for 'Family Daily Active People (DAP)' and 'Family Monthly Active People (MAP)' over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides absolute values for 'Daily Active Users (DAU)' and 'Monthly Active Users (MAU)' over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides 'Marketing and sales' expenses in absolute values and as a percentage of revenue for three years, which are important 'key financial metrics' for cost structure analysis.",
+            "This context discusses challenges to advertising revenue due to reduced data signals and legislative/regulatory/platform developments. This is a significant material risk and directly impacts the 'bear case' for revenue generation.",
+            "This context provides absolute values for 'Research and development', 'Marketing and sales', and 'General and administrative' expenses, specifically related to share-based compensation, which are important 'key financial metrics'.",
+            "This context provides absolute values for 'Cost of revenue', 'Research and development', 'Marketing and sales', 'General and administrative', and 'Total share-based compensation expense' for three years, which are crucial 'key financial metrics' for cost structure analysis."
+          ],
+          "average_relevance": 0.9318181818181818
+        },
+        "recall_details": {
+          "message": "Ground truth not provided"
+        },
+        "similarity_details": {
+          "message": "Ground truth not provided"
+        },
+        "correctness_details": {
+          "message": "Ground truth not provided"
+        }
+      },
+      "timestamp": "2026-05-28T15:44:57.166Z",
+      "model_used": "gemini-2.5-flash"
+    },
+    {
+      "faithfulness": 0.8461538461538461,
+      "answer_relevancy": 0.4,
+      "context_precision": 0.9687125349760264,
+      "context_recall": 0,
+      "answer_semantic_similarity": 0,
+      "answer_correctness": 0,
+      "evaluation_details": {
+        "faithfulness_details": {
+          "total_statements": 13,
+          "supported_statements": 11,
+          "statements": [
+            "Net income is $39,098, $23,200, $39,370.",
+            "Free Cash Flow is $43,010.",
+            "Loss of users and marketers is a risk.",
+            "Ineffective operation with mobile operating systems is a risk.",
+            "Failure of new products is a risk.",
+            "Fluctuations in financial results are a risk.",
+            "Unfavorable media coverage is a risk.",
+            "There are risks related to product offerings.",
+            "There are risks related to business operations.",
+            "The company faces a challenging litigation and regulatory environment.",
+            "The company may have exposure to greater than anticipated tax liabilities.",
+            "System failures or outages are a risk.",
+            "Breaches of security or privacy are a risk."
+          ],
+          "verdicts": [
+            false,
+            false,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true,
+            true
+          ],
+          "reasoning": [
+            "The context provides net income as percentages, not specific dollar amounts.",
+            "The context does not mention 'Free Cash Flow' or the specific dollar amount provided.",
+            "The context lists 'our ability to add and retain users' and 'the loss of, or reduction in spending by, our marketers' as risks.",
+            "The context explicitly states 'ineffective operation with mobile operating systems' as a risk.",
+            "The context lists 'failure of our new products' as a risk.",
+            "The context explicitly states 'fluctuations in our financial results' as a risk.",
+            "The context mentions 'unfavorable media coverage' as a risk.",
+            "The context has a section titled 'Risks Related to Our Product Offerings'.",
+            "The context has a section titled 'Risks Related to Our Business Operations and Financial Results'.",
+            "The context states 'we expect to continue to face a challenging litigation and regulatory environment' and lists 'litigation' as a risk.",
+            "The context states 'We may have exposure to greater than anticipated tax liabilities' and mentions 'management of tax consequences'.",
+            "The context lists 'system failures or outages' as a risk.",
+            "The context lists 'breaches of security or privacy' as a risk."
+          ]
+        },
+        "relevancy_details": {
+          "reasoning": "The answer provides some financial metrics (Net income, Free Cash Flow) and a list of material risks, which are two components requested in the question. However, it completely fails to provide a bull case, a bear case, or any structured analysis. The financial metrics are presented as raw numbers without context or analysis, and the risks are merely listed without elaboration. The core request for a 'structured investment analysis' is not met."
+        },
+        "precision_details": {
+          "relevance_scores": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            0.1,
+            1,
+            0.9,
+            0.5,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "reasoning": [
+            "This context directly lists various material risks related to product offerings, business operations, and government regulation, which are crucial for a structured investment analysis's 'material risks' and 'bear case' sections.",
+            "This context continues to list material risks, including those related to moderation, data protection, competition, global operations, tax, and geopolitical events, directly contributing to the 'material risks' and 'bear case' sections.",
+            "This context discusses the challenging litigation and regulatory environment, which is a significant material risk for the investment analysis.",
+            "This context provides further details on the potential adverse outcomes of litigation and exposure to greater tax liabilities, both of which are material risks.",
+            "This context elaborates on the potential negative impacts of lawsuits and claims, including substantial monetary damages or fines and changes to business practices, directly contributing to the 'material risks' and 'bear case'.",
+            "This context lists various costs and expenses, including those related to product development, gross/operating margins, acquisitions, infrastructure, security breaches, and litigation. These are key financial metrics and also represent operational/financial risks.",
+            "This context details risks related to technical infrastructure, foreign government actions impacting infrastructure, and inaccuracies in community metrics, all of which are material operational risks.",
+            "This context provides specific details about regulatory actions (FTC, COPPA) and their potential severe impacts, including significant limitations on business practices and substantial penalties, making it highly relevant for 'material risks' and 'bear case'.",
+            "This context provides a percentage-based income statement (Revenue, Costs, Income from operations, Net income) for three years, which are essential 'key financial metrics' for an investment analysis.",
+            "This context lists additional material risks such as user base volatility, product development delays, market volatility, and employee illness. It also highlights investments in Reality Labs as a factor reducing operating margin and profitability, which is relevant for both 'bear case' and 'key financial metrics'.",
+            "This context specifically identifies 'Equity Price Risk' for non-marketable equity securities, which is a direct material financial risk.",
+            "This context is a general disclaimer about forward-looking statements and the inherent risks and uncertainties. While it mentions risks, it does not provide specific content for the investment analysis itself, making it minimally relevant.",
+            "This context provides absolute values for 'Income before provision for income taxes' broken down by domestic and foreign sources for three years, which are crucial 'key financial metrics'.",
+            "This context discusses the company's investment philosophy, focus on operating efficiency, and allocation of expenses between FoA and Reality Labs, including significant investments in AI. This information is valuable for both 'bull case' (AI initiatives) and 'bear case' (RL investments impacting margins) and overall strategic analysis.",
+            "This context mentions competitive threats as a factor that could negatively affect business and financial results, which is a material risk.",
+            "This context provides 'Daily Active People (DAP)' and 'Monthly Active People (MAP)' metrics over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides absolute values for 'Family Daily Active People (DAP)' and 'Family Monthly Active People (MAP)' over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides absolute values for 'Daily Active Users (DAU)' and 'Monthly Active Users (MAU)' over several periods, which are crucial 'key financial metrics' for assessing user engagement and growth.",
+            "This context provides 'Marketing and sales' expenses in absolute values and as a percentage of revenue for three years, which are important 'key financial metrics' for cost structure analysis.",
+            "This context discusses challenges to advertising revenue due to reduced data signals and legislative/regulatory/platform developments. This is a significant material risk and directly impacts the 'bear case' for revenue generation.",
+            "This context provides absolute values for 'Research and development', 'Marketing and sales', and 'General and administrative' expenses, specifically related to share-based compensation, which are important 'key financial metrics'.",
+            "This context provides absolute values for 'Cost of revenue', 'Research and development', 'Marketing and sales', 'General and administrative', and 'Total share-based compensation expense' for three years, which are crucial 'key financial metrics' for cost structure analysis."
+          ],
+          "average_relevance": 0.9318181818181818
+        },
+        "recall_details": {
+          "message": "Ground truth not provided"
+        },
+        "similarity_details": {
+          "message": "Ground truth not provided"
+        },
+        "correctness_details": {
+          "message": "Ground truth not provided"
+        }
+      },
+      "timestamp": "2026-05-28T15:45:37.683Z",
+      "model_used": "gemini-2.5-flash"
+    }
+  ],
+  "aggregate_metrics": {
+    "faithfulness": 0.48700854700854707,
+    "answer_relevancy": 0.5,
+    "context_precision": 0.9557508445325906,
+    "context_recall": 0,
+    "answer_semantic_similarity": 0,
+    "answer_correctness": 0,
+    "std_dev": {
+      "faithfulness": 0.25056610607099006,
+      "answer_relevancy": 0.1095445115010332,
+      "context_precision": 0.015874763895163155,
+      "context_recall": 0,
+      "answer_semantic_similarity": 0,
+      "answer_correctness": 0
+    }
+  },
+  "summary": "RAGAS Evaluation Summary (5 test cases)\n========================================\nFaithfulness:              48.70% (±25.06%)\nAnswer Relevancy:          50.00% (±10.95%)\nContext Precision:         95.58% (±1.59%)\nContext Recall:            0.00% (±0.00%)\nAnswer Similarity:         0.00% (±0.00%)\nAnswer Correctness:        0.00% (±0.00%)\n\nOverall RAG Quality Score: 64.76%"
+}

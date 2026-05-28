@@ -1,15 +1,18 @@
 import { injectable } from "tsyringe";
 import { AnalysisRepository } from "@/lib/repositories/analysis.repository";
 import { runFinancialAnalysis } from "@/lib/agents/financial-analyzer";
-import { listUserFiles } from "@/lib/vectorstore/operations";
+import { DocumentRepository } from "@/lib/repositories/document.repository";
 import type { AnalysisFiltersDTO } from "@/lib/types/dtos";
 import type { Analysis } from "@/lib/types/domain-models";
 import { DEFAULT_ANALYSIS_QUESTION } from "@/lib/agents/constants";
-import { NotFoundError, ValidationError, ProcessingError } from "@/lib/errors/domain-errors";
+import { NotFoundError, ValidationError } from "@/lib/errors/domain-errors";
 
 @injectable()
 export class AnalysisService {
-  constructor(private readonly analysisRepo: AnalysisRepository) {}
+  constructor(
+    private readonly analysisRepo: AnalysisRepository,
+    private readonly documentRepo: DocumentRepository
+  ) {}
 
   async startAnalysis(
     userId: string,
@@ -21,7 +24,7 @@ export class AnalysisService {
     }
     const resolvedQuestion = question?.trim() || DEFAULT_ANALYSIS_QUESTION;
 
-    const userFiles = await listUserFiles(userId);
+    const userFiles = await this.documentRepo.findByIdsAndUserId(fileIds, userId);
     const fileMap = new Map(userFiles.map((f) => [f.fileId, f]));
 
     const documents = fileIds.map((fileId) => {
@@ -37,20 +40,65 @@ export class AnalysisService {
       };
     });
 
-    const analysis = await this.analysisRepo.create({ userId, documents });
+    return this.analysisRepo.create({ userId, documents });
+  }
 
-    this.runInBackground(analysis.id, fileIds, userId, resolvedQuestion).catch((err) => {
-      console.error("Analysis background error:", err);
-    });
+  /** Run LangGraph pipeline and persist result. Call via `after()` on Vercel/serverless. */
+  async executeAnalysis(
+    analysisId: string,
+    userId: string,
+    question: string
+  ): Promise<void> {
+    const pending = await this.analysisRepo.findByIdAndUserId(analysisId, userId);
+    if (!pending) {
+      console.error(
+        `executeAnalysis: analysis ${analysisId} not found for user ${userId} — skipping`
+      );
+      return;
+    }
 
-    return analysis;
+    const fileIds = pending.fileIds;
+    const resolvedQuestion = question?.trim() || DEFAULT_ANALYSIS_QUESTION;
+
+    try {
+      const { analysis, traceUrl } = await runFinancialAnalysis(
+        fileIds,
+        userId,
+        resolvedQuestion
+      );
+      await this.persistAnalysisResult(analysisId, { result: analysis, traceUrl });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      await this.persistAnalysisResult(analysisId, {
+        result: { error: message },
+      });
+    }
+  }
+
+  /** Always persist terminal state so analyses do not stay stuck in "running". */
+  private async persistAnalysisResult(
+    analysisId: string,
+    data: { result: unknown; traceUrl?: string }
+  ): Promise<void> {
+    try {
+      await this.analysisRepo.updateResult(analysisId, data);
+    } catch (persistError) {
+      console.error(
+        `Failed to persist analysis result for ${analysisId}:`,
+        persistError
+      );
+    }
   }
 
   async listUserAnalyses(
     userId: string,
     filters?: AnalysisFiltersDTO
   ): Promise<Analysis[]> {
-    return this.analysisRepo.findByUserId(userId, filters);
+    return this.analysisRepo.findSummariesByUserId(userId, undefined, undefined);
+  }
+
+  async listRecentUserAnalyses(userId: string, limit: number): Promise<Analysis[]> {
+    return this.analysisRepo.findSummariesByUserId(userId, limit);
   }
 
   async getAnalysis(userId: string, analysisId: string): Promise<Analysis> {
@@ -67,31 +115,5 @@ export class AnalysisService {
 
   async getAnalysisCount(userId: string): Promise<number> {
     return this.analysisRepo.countByUserId(userId);
-  }
-
-  private async runInBackground(
-    analysisId: string,
-    fileIds: string[],
-    userId: string,
-    question: string
-  ): Promise<void> {
-    try {
-      const { analysis, traceUrl } = await runFinancialAnalysis(
-        fileIds,
-        userId,
-        question
-      );
-      await this.analysisRepo.updateResult(analysisId, { result: analysis, traceUrl });
-    } catch (error) {
-      await this.analysisRepo.updateResult(analysisId, {
-        result: {
-          error: error instanceof Error ? error.message : "Unknown error",
-        },
-      });
-      throw new ProcessingError(
-        `Analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
-        error instanceof Error ? error : undefined
-      );
-    }
   }
 }

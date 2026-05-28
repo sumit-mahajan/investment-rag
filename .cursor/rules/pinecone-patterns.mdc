@@ -1,0 +1,87 @@
+---
+description: Pinecone index, namespace, chunk metadata — dense-only
+globs: lib/vectorstore/**/*,lib/retrieval/**/*,lib/ingestion/**/*
+alwaysApply: false
+---
+
+# Pinecone patterns (@pinecone-database/pinecone ^3)
+
+## Index config
+
+- **Name:** `process.env.PINECONE_INDEX_NAME` — required, no fallback
+- **Type:** Dense only. No sparse index. No hybrid mode.
+- **Dimension:** 768 (gemini-embedding-001)
+- **Metric:** cosine
+- **Spec:** serverless, AWS us-east-1
+- **Client:** `lib/vectorstore/pinecone-client.ts` → `getIndex()`
+
+## Namespace strategy
+
+**One namespace per user:** `userId`
+
+All documents for a user share one namespace. Multi-document queries use a `$in` filter — one Pinecone query per analysis.
+
+```typescript
+const filter = { fileId: { $in: fileIds }, userId: { $eq: userId } };
+await index.namespace(userId).query({ vector, topK, filter, includeMetadata: true });
+```
+
+## Vector IDs
+
+`${fileId}_${chunkIndex}` — stable, unique per chunk.
+
+## Chunk metadata schema (all fields required at upsert)
+
+```typescript
+interface ChunkMetadata {
+  fileId:     string;           // stable UUID, generated at upload time
+  fileName:   string;           // original filename — used in citations
+  blobUrl:    string;           // Vercel Blob URL — used by Node 4 / attribution UI
+  pageNumber: number;           // 1-indexed, from LlamaParse — never null
+  content:    string;           // full chunk text or markdown table
+  chunkType:  "prose" | "table";
+  userId:     string;
+}
+```
+
+`pageNumber` is required. If LlamaParse does not return a page number for a chunk, use the nearest known page — never omit.
+
+`blobUrl` is required. Node 4 and the source attribution UI use it to link back to the original file.
+
+## Upsert
+
+```typescript
+const vector: VectorRecord = {
+  id:       `${chunk.fileId}_${chunk.chunkIndex}`,
+  values:   embedding,       // number[], length 768
+  metadata: chunkMetadata,   // ChunkMetadata cast to Record<string, string|number>
+};
+await index.namespace(userId).upsert([vector]);
+```
+
+## Delete on file removal
+
+```typescript
+await index.namespace(userId).deleteMany({ fileId: { $eq: fileId } });
+```
+
+## Query result → RetrievedChunk
+
+```typescript
+const chunk: RetrievedChunk = {
+  id:         match.id,
+  content:    String(meta.content),
+  fileName:   String(meta.fileName),
+  pageNumber: Number(meta.pageNumber),
+  chunkType:  meta.chunkType as "prose" | "table",
+  score:      match.score ?? 0,
+};
+```
+
+## What is gone
+
+- Per-document namespaces — deleted
+- Keyword/BM25/hybrid search — deleted
+- Cohere reranking — deleted
+- `categories`, `contentType`, `extractMetadata` — deleted
+- Parallel per-doc namespace queries — deleted

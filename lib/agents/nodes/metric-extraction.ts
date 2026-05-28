@@ -6,10 +6,10 @@ import { retrieveMetricChunks } from "@/lib/retrieval/retrieve-metric-chunks";
 import type { ExtractedMetric } from "@/lib/types/analysis";
 import {
   buildMetricDisplayLine,
-  normalizeMetricValue,
   validateMetricAgainstContext,
   type MetricExtractionFields,
 } from "../metric-utils";
+import { groqRateLimitMessage, isGroqRateLimitError } from "../groq-errors";
 
 const metricExtractionSchema = z.object({
   currency: z
@@ -137,6 +137,10 @@ ${formatChunksForPrompt(chunks)}`;
         chunks,
       });
     } catch (error) {
+      if (isGroqRateLimitError(error)) {
+        console.error(`Groq rate limit during metric extraction (${metric.label})`);
+        throw new Error(groqRateLimitMessage(error));
+      }
       console.error(`Metric extraction failed for ${metric.label}:`, error);
       extractedMetrics.push({ label: metric.label, value: null, chunks });
     }

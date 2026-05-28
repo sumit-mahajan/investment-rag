@@ -16,3 +16,4 @@
 
 - Register route awaits LlamaParse + embed + Pinecone (often 1–3 min). Large PDFs may approach the 300s API limit on Vercel.
 - **Legacy Pinecone metadata:** Vectors with old `documentId` keys need re-ingest (`fileId`, `fileName`, `blobUrl`, `chunkType`).
+- **Existing uploads before `documents` table:** Run `pnpm db:push` (or apply `drizzle/0000_documents_table.sql`), then `pnpm backfill:documents -- --userId <clerk_user_id>` (or `--from-db` if you have analysis rows).

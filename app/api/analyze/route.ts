@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
 import { AnalysisService } from "@/lib/services/analysis.service";
@@ -21,11 +21,24 @@ export async function POST(req: NextRequest) {
     const parsed = AnalysisRequestSchema.parse(body);
     const fileIds = parsed.fileIds ?? parsed.documentIds ?? [];
 
+    const resolvedQuestion = parsed.question ?? "";
     const analysis = await analysisService.startAnalysis(
       userId,
       fileIds,
-      parsed.question ?? ""
+      resolvedQuestion
     );
+
+    after(async () => {
+      try {
+        await analysisService.executeAnalysis(
+          analysis.id,
+          userId,
+          resolvedQuestion
+        );
+      } catch (error) {
+        console.error("Analysis execution failed:", error);
+      }
+    });
 
     return NextResponse.json({
       analysisId: analysis.id,

@@ -82,10 +82,10 @@ export async function deleteVectorsByDocumentId(
 }
 
 /**
- * List unique files for a user by scanning Pinecone namespace metadata.
- * Document registry lives entirely in Pinecone — no Postgres table.
+ * List unique files by scanning every vector in a Pinecone namespace.
+ * Used only by `scripts/backfill-documents-from-pinecone.ts` — prefer Postgres `documents`.
  */
-export async function listUserFiles(userId: string): Promise<FileRecord[]> {
+export async function listUserFilesFromPinecone(userId: string): Promise<FileRecord[]> {
   const index = getIndex();
   const ns = index.namespace(userId);
   const fileMap = new Map<string, FileRecord>();

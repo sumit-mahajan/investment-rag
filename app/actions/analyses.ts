@@ -1,5 +1,6 @@
 "use server";
 
+import { after } from "next/server";
 import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
@@ -21,11 +22,34 @@ export async function startAnalysisAction(
       return { success: false, error: "At least one document must be selected" };
     }
     const analysisService = container.resolve(AnalysisService);
+    const resolvedQuestion = question?.trim() ?? "";
     const analysis = await analysisService.startAnalysis(
       userId,
       documentIds,
-      question?.trim() ?? ""
+      resolvedQuestion
     );
+
+    const runPipeline = async () => {
+      try {
+        await analysisService.executeAnalysis(
+          analysis.id,
+          userId,
+          resolvedQuestion
+        );
+      } catch (error) {
+        console.error("Analysis execution failed:", error);
+      } finally {
+        revalidatePath("/analyses");
+        revalidatePath(`/analyses/${analysis.id}`);
+      }
+    };
+
+    // In dev, await so the pipeline isn't dropped when the server action returns
+    if (process.env.NODE_ENV === "development") {
+      await runPipeline();
+    } else {
+      after(runPipeline);
+    }
 
     revalidatePath("/analyses");
     revalidatePath(`/analyses/${analysis.id}`);

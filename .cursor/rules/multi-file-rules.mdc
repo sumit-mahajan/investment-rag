@@ -1,0 +1,70 @@
+---
+description: Multi-document identity, ingestion, retrieval, and citation rules
+globs: "**/*.{ts,tsx}"
+alwaysApply: false
+---
+
+# Multi-file rules
+
+## Source identity — non-negotiable
+
+Every chunk stored in Pinecone must carry all of these. None are optional:
+
+| Field | Value |
+|-------|-------|
+| `fileId` | UUID generated at upload time — stable, never changes |
+| `fileName` | Original filename e.g. `apple-10k-2024.pdf` |
+| `blobUrl` | Vercel Blob URL of the uploaded PDF |
+| `pageNumber` | Integer ≥ 1, from LlamaParse |
+| `userId` | Clerk user ID |
+
+There is no Postgres `documents` table. The only record of a file's identity is in Pinecone metadata. If a chunk loses its metadata, the file cannot be cited.
+
+## Upload flow
+
+```
+User selects N PDFs
+→ for each file in parallel:
+    generate fileId = crypto.randomUUID()
+    upload to Vercel Blob → blobUrl
+    POST /api/documents/register { fileId, fileName, blobUrl, fileBuffer }
+    → ingestDocument(fileId, userId, fileName, blobUrl, buffer) [background]
+       LlamaParse → pages → chunks → embed → upsert(namespace=userId)
+```
+
+File status is not tracked in Postgres. The UI polls Pinecone or uses a simple in-memory state. If a `fileId` returns no results from Pinecone, ingestion is not yet complete.
+
+## Multi-document retrieval
+
+Analysis takes `fileIds: string[]`. All retrieval is one Pinecone query:
+
+```typescript
+const filter = { fileId: { $in: fileIds }, userId: { $eq: userId } };
+await index.namespace(userId).query({ vector, topK, filter, includeMetadata: true });
+```
+
+No parallel queries. No merging. No keyword fallback.
+
+## Citations
+
+Citations come from Pinecone metadata — `fileName` and `pageNumber`. The LLM never generates citation data; it only generates prose. Node 4 (citationAssembly) attaches citations by matching LLM claims to the chunks retrieved in Nodes 1 and 2.
+
+## API shape
+
+```typescript
+// POST /api/documents/register
+{ fileId: string; fileName: string; blobUrl: string }  // returns immediately
+
+// POST /api/analyze
+{ fileIds: string[]; question: string }
+```
+
+## What does not exist
+
+- `documents` Postgres table — deleted
+- `document_chunks` Postgres table — deleted
+- `analyses.documentId` FK — deleted
+- `analyses.documentIds` array — replaced by `analyses.documents` json field
+- Per-document Pinecone namespaces — deleted
+- Hybrid/keyword search — deleted
+- "Primary document" concept — all files are peers

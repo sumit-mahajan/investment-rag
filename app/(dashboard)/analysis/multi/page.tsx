@@ -26,17 +26,11 @@ export default async function MultiDocAnalysisPage({
 
   const documentService = container.resolve(DocumentService);
 
-  const files = await Promise.all(
-    fileIds.map(async (id) => {
-      try {
-        return await documentService.getFile(userId, id);
-      } catch {
-        return null;
-      }
-    })
-  );
-
-  const validFiles = files.filter((f): f is NonNullable<typeof f> => f !== null);
+  const foundFiles = await documentService.getFiles(userId, fileIds);
+  const fileById = new Map(foundFiles.map((f) => [f.fileId, f]));
+  const validFiles = fileIds
+    .map((id) => fileById.get(id))
+    .filter((f): f is NonNullable<typeof f> => f != null);
   if (validFiles.length === 0) notFound();
 
   const allCompleted = validFiles.every((f) => f.status === "completed");

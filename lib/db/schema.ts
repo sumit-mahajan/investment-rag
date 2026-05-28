@@ -1,5 +1,15 @@
-import { pgTable, text, timestamp, uuid, jsonb, index } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  jsonb,
+  index,
+  integer,
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+
+export type DocumentStatus = "processing" | "completed" | "failed";
 
 /** Document snapshot stored on each analysis row */
 export type AnalysisDocumentRef = {
@@ -13,6 +23,23 @@ export type ConversationMessage = {
   content: string;
   createdAt: string;
 };
+
+/** Uploaded file registry — vectors remain in Pinecone */
+export const documents = pgTable(
+  "documents",
+  {
+    fileId: uuid("file_id").primaryKey(),
+    userId: text("user_id").notNull(),
+    fileName: text("file_name").notNull(),
+    blobUrl: text("blob_url").notNull(),
+    status: text("status").$type<DocumentStatus>().notNull().default("completed"),
+    chunkCount: integer("chunk_count").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    userIdIdx: index("documents_user_id_idx").on(table.userId),
+  })
+);
 
 export const analyses = pgTable(
   "analyses",

@@ -3,11 +3,14 @@ import { injectable } from "tsyringe";
 import { ingestDocument } from "@/lib/ingestion";
 import type { FileRecord } from "@/lib/types/core";
 import { NotFoundError } from "@/lib/errors/domain-errors";
-import { listUserFiles, deleteVectorsByFileId } from "@/lib/vectorstore/operations";
+import { deleteVectorsByFileId } from "@/lib/vectorstore/operations";
+import { DocumentRepository } from "@/lib/repositories/document.repository";
 import { del } from "@vercel/blob";
 
 @injectable()
 export class DocumentService {
+  constructor(private readonly documentRepo: DocumentRepository) {}
+
   async registerFile(
     userId: string,
     data: {
@@ -35,6 +38,15 @@ export class DocumentService {
       fileBuffer: data.fileBuffer,
     });
 
+    await this.documentRepo.create({
+      fileId,
+      userId,
+      fileName,
+      blobUrl: data.blobUrl,
+      status: "completed",
+      chunkCount,
+    });
+
     console.log(`[ingest] done fileId=${fileId} chunks=${chunkCount}`);
 
     return {
@@ -47,19 +59,21 @@ export class DocumentService {
   }
 
   async listUserFiles(userId: string): Promise<FileRecord[]> {
-    return listUserFiles(userId);
+    return this.documentRepo.findByUserId(userId);
   }
 
   async getFile(userId: string, fileId: string): Promise<FileRecord> {
-    const files = await listUserFiles(userId);
-    const file = files.find((f) => f.fileId === fileId);
+    const file = await this.documentRepo.findByIdAndUserId(fileId, userId);
     if (!file) throw new NotFoundError("Document", fileId);
     return file;
   }
 
+  async getFiles(userId: string, fileIds: string[]): Promise<FileRecord[]> {
+    return this.documentRepo.findByIdsAndUserId(fileIds, userId);
+  }
+
   async deleteFile(userId: string, fileId: string, blobUrl?: string): Promise<void> {
-    const files = await listUserFiles(userId);
-    const file = files.find((f) => f.fileId === fileId);
+    const file = await this.documentRepo.findByIdAndUserId(fileId, userId);
     if (!file) throw new NotFoundError("Document", fileId);
 
     await deleteVectorsByFileId(userId, fileId);
@@ -68,10 +82,11 @@ export class DocumentService {
     if (url) {
       del(url).catch((err) => console.error("Failed to delete blob:", err));
     }
+
+    await this.documentRepo.delete(fileId, userId);
   }
 
   async fileExists(userId: string, fileId: string): Promise<boolean> {
-    const files = await listUserFiles(userId);
-    return files.some((f) => f.fileId === fileId);
+    return this.documentRepo.exists(fileId, userId);
   }
 }

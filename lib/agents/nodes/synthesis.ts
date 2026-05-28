@@ -3,6 +3,7 @@ import type { AnalysisState } from "../financial-analyzer";
 import { getGroqModel } from "../groq";
 import type { InvestmentAnalysis } from "@/lib/types/analysis";
 import { SYNTHESIS_POINT_LIMITS } from "../constants";
+import { groqRateLimitMessage, isGroqRateLimitError } from "../groq-errors";
 
 const synthesisSchema = z.object({
   verdict: z.object({
@@ -85,7 +86,15 @@ Rules:
 
 ${buildContext(state)}`;
 
-  const draft = await model.invoke(prompt);
+  let draft: z.infer<typeof synthesisSchema>;
+  try {
+    draft = await model.invoke(prompt);
+  } catch (error) {
+    if (isGroqRateLimitError(error)) {
+      throw new Error(groqRateLimitMessage(error));
+    }
+    throw error;
+  }
 
   const draftAnalysis: InvestmentAnalysis = {
     verdict: draft.verdict,

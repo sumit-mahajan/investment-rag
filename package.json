@@ -12,6 +12,7 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "init:pinecone": "tsx scripts/init-pinecone.ts",
+    "backfill:documents": "tsx scripts/backfill-documents-from-pinecone.ts",
     "type-check": "tsc --noEmit",
     "evaluate:example": "tsx scripts/evaluate-rag-example.ts",
     "evaluate:single": "tsx scripts/evaluate-rag.ts --file scripts/test-cases/single-test-case.json",

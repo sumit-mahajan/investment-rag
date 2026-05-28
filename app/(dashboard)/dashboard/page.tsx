@@ -24,12 +24,10 @@ export default async function DashboardPage() {
   const documentService = container.resolve(DocumentService);
   const analysisService = container.resolve(AnalysisService);
 
-  const [userFiles, allAnalyses] = await Promise.all([
+  const [userFiles, recentAnalyses] = await Promise.all([
     documentService.listUserFiles(userId),
-    analysisService.listUserAnalyses(userId),
+    analysisService.listRecentUserAnalyses(userId, 3),
   ]);
-
-  const recentAnalyses = allAnalyses.slice(0, 3);
 
   const documentListItems: DocumentListItem[] = userFiles.map((f) => ({
     id: f.fileId,

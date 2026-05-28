@@ -1,5 +1,5 @@
 /**
- * Domain models — aligned to 2-table Postgres schema + Pinecone file registry
+ * Domain models — Postgres analyses/conversations/documents + Pinecone chunks
  */
 
 import type { AnalysisDocumentRef, ConversationMessage } from "@/lib/db/schema";

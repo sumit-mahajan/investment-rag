@@ -2,7 +2,7 @@
  * Core domain types — defined first; all pipelines flow from these.
  */
 
-/** File record — identity lives in Pinecone metadata, not Postgres */
+/** File record — registry in Postgres `documents`, chunks in Pinecone */
 export interface FileRecord {
   fileId: string;
   fileName: string;

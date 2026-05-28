@@ -1,0 +1,88 @@
+---
+description: End-to-end data flow and folder ownership
+alwaysApply: true
+---
+
+# Project architecture
+
+Stack: Next.js 15 App Router, TypeScript, Clerk, Vercel Blob, Pinecone (dense only), LangGraph ^0.2, LlamaParse, Groq (`llama-3.3-70b-versatile`), Gemini embeddings (768d), Vercel Postgres (`documents`, `analyses`, `conversations`), LangSmith, tsyringe DI.
+
+**No:** hybrid search, keyword search, Cohere, reranking, Postgres chunk registry, pdf-parse.
+
+## Core types
+
+```typescript
+// lib/types/core.ts
+interface ChunkMetadata {
+  fileId: string; fileName: string; blobUrl: string;
+  pageNumber: number; content: string; chunkType: "prose"|"table"; userId: string;
+}
+interface Citation     { documentName: string; pageNumber: number }
+interface Metric       { label: string; value: string|null; citation: Citation|null }
+interface InvestmentAnalysis {
+  bullCase:   { points: string[];   citations: Citation[] }
+  bearCase:   { points: string[];   citations: Citation[] }
+  keyMetrics: Metric[]
+  keyRisks:   { points: string[];   citations: Citation[] }
+}
+```
+
+## Ingestion pipeline
+
+```
+Client uploads PDF → Vercel Blob (client-side) → POST /api/documents/register
+  → generate fileId (uuid), store blobUrl + fileName in response
+  → ingestDocument(fileId, userId, fileName, blobUrl, fileBuffer) [fire-and-forget]
+    → LlamaParse.parse(buffer) → pages with prose + markdown tables, each with pageNumber
+    → chunkPages(pages) → Chunk[] — prose and table chunks, each with pageNumber
+    → embedChunks(chunks) → number[][] (gemini-embedding-001, 768d, batch 50)
+    → upsertChunks(chunks, embeddings, userId) → Pinecone namespace=userId
+      metadata per vector: { fileId, fileName, blobUrl, pageNumber, content, chunkType, userId }
+```
+
+After ingest, `DocumentService` inserts a row into Postgres `documents`. Chunks/vectors stay in Pinecone only.
+
+## Analysis pipeline (4-node LangGraph)
+
+```
+POST /api/analyze { fileIds: string[], question: string }
+  → runAnalysis(fileIds, userId, question) → LangGraph:
+    Node 1 (metricExtraction) → retrieve metric-specific chunks → ExtractedMetrics in state
+    Node 2 (qualitativeRetrieval) → retrieve risk/catalyst chunks → RetrievedPassages in state
+    Node 3 (synthesis) → Groq structured output → InvestmentAnalysis (no retrieval)
+    Node 4 (citationAssembly) → attach citations from chunk metadata → final InvestmentAnalysis
+  → insert analyses row { userId, documents[], result, traceUrl, createdAt }
+  → return { analysis: InvestmentAnalysis, traceUrl: string }
+```
+
+## Folder ownership
+
+| Path | Owns |
+|------|------|
+| `app/api/` | HTTP boundary — parse, call service, return response |
+| `app/actions/` | Server actions — auth, call service, revalidatePath |
+| `lib/types/` | All shared interfaces (core.ts is the source of truth) |
+| `lib/ingestion/` | parse → chunk → embed → upsert (one function per step) |
+| `lib/retrieval/` | Pinecone vector query only — `retrieveChunks(userId, fileIds, query, topK)` |
+| `lib/agents/` | LangGraph graph + 4 nodes |
+| `lib/services/` | Orchestrate DI services + ingestion/retrieval/agents |
+| `lib/repositories/` | Drizzle queries for `documents`, `analyses`, and `conversations` |
+| `lib/vectorstore/` | Pinecone client, upsert, query, delete |
+| `components/` | Client UI — never calls DB directly |
+
+## Postgres schema
+
+```
+documents:     fileId, userId, fileName, blobUrl, status, chunkCount, createdAt
+analyses:      id, userId, documents (json[]), result (json), traceUrl, createdAt
+conversations: id, userId, analysisId (fk→analyses), messages (json[]), updatedAt
+```
+
+## What is not here
+
+- No `document_chunks` table, no `analysis_documents` junction
+- No `analyses.documentId` single FK, no `analyses.documentIds` array
+- No Cohere, no reranker, no hybrid/keyword search
+- No `lib/rag/` folder (replaced by `lib/ingestion/` and `lib/retrieval/`)
+- No criteria config loops, no philosophy nodes
+- No `DocumentProcessorService`, no `pdf-parse`

@@ -3,6 +3,15 @@ import { NextRequest } from "next/server";
 
 vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
 vi.mock("@/lib/di", () => ({ container: { resolve: vi.fn() } }));
+vi.mock("next/server", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/server")>();
+  return {
+    ...actual,
+    after: (callback: () => void | Promise<void>) => {
+      void callback();
+    },
+  };
+});
 
 import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
@@ -14,7 +23,7 @@ describe("POST /api/analyze", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    mockAnalysisService = { startAnalysis: vi.fn() };
+    mockAnalysisService = { startAnalysis: vi.fn(), executeAnalysis: vi.fn().mockResolvedValue(undefined) };
     vi.mocked(container.resolve).mockReturnValue(mockAnalysisService);
   });
 
@@ -38,6 +47,11 @@ describe("POST /api/analyze", () => {
     expect(mockAnalysisService.startAnalysis).toHaveBeenCalledWith(
       "user-123",
       ["550e8400-e29b-41d4-a716-446655440000"],
+      "What are the key financial risks?"
+    );
+    expect(mockAnalysisService.executeAnalysis).toHaveBeenCalledWith(
+      "analysis-123",
+      "user-123",
       "What are the key financial risks?"
     );
   });

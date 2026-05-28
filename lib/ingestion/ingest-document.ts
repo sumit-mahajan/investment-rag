@@ -5,7 +5,7 @@ import { embedChunks } from "./embed-chunks";
 import { upsertChunks } from "./upsert-chunks";
 import type { IngestDocumentInput } from "./types";
 
-/** Ingest a PDF via LlamaParse → Pinecone. No Postgres writes. */
+/** Ingest a PDF via LlamaParse → Pinecone. Postgres row is created by DocumentService after success. */
 export async function ingestDocument(input: IngestDocumentInput): Promise<number> {
   const { fileId, userId, fileName, blobUrl, fileBuffer } = input;
 

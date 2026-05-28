@@ -1,43 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { currentUser } from "@clerk/nextjs/server";
+import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
 import { DocumentService } from "@/lib/services/document.service";
-import { UserService } from "@/lib/services/user.service";
 import { handleError } from "@/lib/utils/errors";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
-
-interface RegisterRequest {
-  blobUrl: string;
-  filename: string;
-  metadata?: {
-    companyName?: string;
-    tickerSymbol?: string;
-    cik?: string;
-    filingType?: string;
-    filingDate?: string;
-    fiscalYear?: number;
-    fiscalPeriod?: string;
-    sourceUrl?: string;
-  };
-}
+/** LlamaParse + embed + Pinecone can take several minutes on large PDFs */
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const documentService = container.resolve(DocumentService);
-  const userService = container.resolve(UserService);
 
   try {
-    const user = await currentUser();
-
-    if (!user) {
+    const { userId } = await auth();
+    if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await userService.ensureUser(user);
-
-    const body: RegisterRequest = await req.json();
-    const { blobUrl, filename, metadata = {} } = body;
+    const body = await req.json();
+    const { blobUrl, filename } = body;
 
     if (!blobUrl || !filename) {
       return NextResponse.json(
@@ -46,7 +27,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Fetch the file from blob storage
     const fileResponse = await fetch(blobUrl);
     if (!fileResponse.ok) {
       return NextResponse.json(
@@ -57,22 +37,19 @@ export async function POST(req: NextRequest) {
 
     const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
 
-    // Register document and start processing
-    const document = await documentService.registerDocument(user.id, {
+    const file = await documentService.registerFile(userId, {
       blobUrl,
       filename,
       fileBuffer,
-      metadata,
     });
 
     return NextResponse.json({
-      document: {
-        id: document.id,
-        filename: document.filename,
-        status: document.status,
-        createdAt: document.createdAt,
-      },
-      message: "Document registered successfully. Processing started.",
+      fileId: file.fileId,
+      fileName: file.fileName,
+      blobUrl: file.blobUrl,
+      status: file.status,
+      chunkCount: file.chunkCount,
+      message: "Document indexed and ready for analysis.",
     });
   } catch (error) {
     console.error("Register error:", error);

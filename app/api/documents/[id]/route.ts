@@ -5,23 +5,29 @@ import { DocumentService } from "@/lib/services/document.service";
 import { handleError } from "@/lib/utils/errors";
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const documentService = container.resolve(DocumentService);
 
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id: fileId } = await params;
+    const file = await documentService.getFile(userId, fileId);
 
-    const document = await documentService.getDocumentWithChunkCount(userId, id);
-
-    return NextResponse.json(document);
+    return NextResponse.json({
+      id: file.fileId,
+      fileId: file.fileId,
+      originalName: file.fileName,
+      fileName: file.fileName,
+      blobUrl: file.blobUrl,
+      status: file.status,
+      totalChunks: file.chunkCount ?? 0,
+    });
   } catch (error) {
     const errorResponse = handleError(error);
     return NextResponse.json(
@@ -39,14 +45,15 @@ export async function DELETE(
 
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { id } = await params;
+    const { id: fileId } = await params;
+    const body = await req.json().catch(() => ({}));
+    const blobUrl = typeof body?.blobUrl === "string" ? body.blobUrl : undefined;
 
-    await documentService.deleteDocument(userId, id);
+    await documentService.deleteFile(userId, fileId, blobUrl);
 
     return NextResponse.json({ message: "Document deleted successfully" });
   } catch (error) {

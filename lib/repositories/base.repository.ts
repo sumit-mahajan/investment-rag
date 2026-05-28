@@ -1,15 +1,15 @@
 import { db } from "@/lib/db/client";
 import type { ExtractTablesWithRelations } from "drizzle-orm";
 import type { PgTransaction } from "drizzle-orm/pg-core";
-import type { VercelPgQueryResultHKT } from "drizzle-orm/vercel-postgres";
+import type { NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
 import * as schema from "@/lib/db/schema";
 import { RepositoryError } from "@/lib/errors/domain-errors";
 
 /**
- * Transaction type for Drizzle with Vercel Postgres
+ * Transaction type for Drizzle with node-postgres
  */
 export type Transaction = PgTransaction<
-  VercelPgQueryResultHKT,
+  NodePgQueryResultHKT,
   typeof schema,
   ExtractTablesWithRelations<typeof schema>
 >;

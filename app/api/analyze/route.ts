@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
 import { AnalysisService } from "@/lib/services/analysis.service";
-import { analysisCriteria as criteriaConfig } from "@/config/criteria.config";
 import { handleError } from "@/lib/utils/errors";
 import { AnalysisRequestSchema } from "@/lib/utils/validation";
 
@@ -14,20 +13,18 @@ export async function POST(req: NextRequest) {
 
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    const validated = AnalysisRequestSchema.parse(body);
+    const parsed = AnalysisRequestSchema.parse(body);
+    const fileIds = parsed.fileIds ?? parsed.documentIds ?? [];
 
-    // Start analysis
     const analysis = await analysisService.startAnalysis(
       userId,
-      validated.documentId,
-      validated.criteriaIds,
-      criteriaConfig
+      fileIds,
+      parsed.question ?? ""
     );
 
     return NextResponse.json({
@@ -36,11 +33,7 @@ export async function POST(req: NextRequest) {
       message: "Analysis started",
     });
   } catch (error) {
-    console.error("Analysis request error:", error);
     const errorResponse = handleError(error);
-    return NextResponse.json(
-      { error: errorResponse.message },
-      { status: errorResponse.statusCode }
-    );
+    return NextResponse.json({ error: errorResponse.message }, { status: errorResponse.statusCode });
   }
 }

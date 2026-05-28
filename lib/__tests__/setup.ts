@@ -2,6 +2,10 @@
  * Global test setup
  * This file runs before all tests
  */
+if (!process.env.POSTGRES_URL) {
+  process.env.POSTGRES_URL = "postgresql://test:test@127.0.0.1:5432/test";
+}
+
 import "reflect-metadata";
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";

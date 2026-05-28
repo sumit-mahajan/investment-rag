@@ -13,10 +13,9 @@ import {
   Sparkles,
   BarChart3,
   Target,
-  Users,
-  Scale,
   Globe,
   FileCheck,
+  MessageSquare,
 } from "lucide-react";
 
 const documentTypes = [
@@ -32,58 +31,62 @@ const howItWorksSteps = [
     step: 1,
     icon: Upload,
     title: "Upload",
-    description: "Drop any financial PDF—SEC filings, annual reports, or investor decks.",
+    description:
+      "Drop one or multiple PDFs—10-K, annual reports, investor decks. Stored securely on Vercel Blob.",
   },
   {
     step: 2,
     icon: Layers,
-    title: "Parse & Chunk",
-    description: "We extract text, detect structure, and split into smart chunks with categories.",
+    title: "Parse & index",
+    description:
+      "LlamaParse extracts prose and tables per page. Chunks embed into your private Pinecone namespace.",
   },
   {
     step: 3,
     icon: Search,
     title: "Retrieve",
-    description: "Hybrid search finds relevant sections by meaning, filtered by your criteria.",
+    description:
+      "Dense semantic search scoped to each file—metrics, risks, and catalysts pulled with page-level metadata.",
   },
   {
     step: 4,
     icon: Sparkles,
     title: "Analyze",
-    description: "AI evaluates against your chosen criteria and delivers a verdict with citations.",
+    description:
+      "4-node LangGraph pipeline: metrics → qualitative retrieval → synthesis → citations, plus an investment score.",
   },
 ];
 
-const analysisCriteria = [
+const outputFeatures = [
   {
     icon: BarChart3,
-    name: "Financial Health",
-    description: "Revenue growth, margins, cash flow, balance sheet strength",
-  },
-  {
-    icon: Shield,
-    name: "Risk Assessment",
-    description: "Business, market, regulatory, and financial risks",
+    name: "Key metrics",
+    description: "Revenue, margins, FCF, debt/equity—with correct currency and units",
   },
   {
     icon: TrendingUp,
-    name: "Growth Potential",
-    description: "R&D, market expansion, innovation pipeline",
+    name: "Bull & bear cases",
+    description: "Grounded arguments from retrieved passages, not generic filler",
+  },
+  {
+    icon: Shield,
+    name: "Investment score",
+    description: "0–100 score with buy/hold/caution recommendation and executive summary",
+  },
+  {
+    icon: FileCheck,
+    name: "Citations & sources",
+    description: "Click any citation to open the PDF at that page; see all sources used",
+  },
+  {
+    icon: MessageSquare,
+    name: "Follow-up chat",
+    description: "Ask questions after the report—context persists per analysis",
   },
   {
     icon: Target,
-    name: "Competitive Position",
-    description: "Market share, moats, differentiation, pricing power",
-  },
-  {
-    icon: Users,
-    name: "Management Quality",
-    description: "Leadership, governance, compensation alignment",
-  },
-  {
-    icon: Scale,
-    name: "Regulatory Compliance",
-    description: "Legal proceedings, compliance status, litigation risks",
+    name: "Multi-document",
+    description: "Analyze several filings together with file-scoped retrieval",
   },
 ];
 
@@ -138,8 +141,8 @@ export default function HomePage() {
             <span className="text-blue-600">any financial report</span>
           </h1>
           <p className="text-base sm:text-xl text-slate-600 max-w-2xl mx-auto mb-6 sm:mb-8 opacity-0 animate-fade-in-up animation-delay-150 px-2">
-            Upload 10-K filings, annual reports, quarterly reports, investor presentations—from any
-            company, any jurisdiction. Get instant insights across 6 analysis criteria.
+            Upload 10-K filings, annual reports, and investor decks—from any company or jurisdiction.
+            Get a structured investment report with score, metrics, and cited sources in minutes.
           </p>
           <div className="flex flex-wrap justify-center gap-1.5 sm:gap-2 mb-8 sm:mb-10 opacity-0 animate-fade-in-up animation-delay-200 px-2">
             {documentTypes.map((type, i) => (
@@ -205,18 +208,18 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* How it helps - Analysis criteria */}
+      {/* What you get */}
       <section className="bg-slate-50/80 border-y border-slate-200/60 py-12 sm:py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-semibold text-slate-900 text-center mb-3 sm:mb-4">
-            How it helps
+            What you get
           </h2>
           <p className="text-sm sm:text-base text-slate-600 text-center max-w-xl mx-auto mb-10 sm:mb-16 px-2">
-            Choose your criteria. We analyze the document and return a scored verdict with
-            citations—so you can verify every insight.
+            Every analysis returns a decision-ready report—then you can ask follow-up questions
+            grounded in the same documents.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {analysisCriteria.map(({ icon: Icon, name, description }, i) => (
+            {outputFeatures.map(({ icon: Icon, name, description }, i) => (
               <div
                 key={name}
                 className={`group flex gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-md transition-all duration-300 opacity-0 animate-fade-in-up ${["animation-delay-300", "animation-delay-400", "animation-delay-500", "animation-delay-600", "animation-delay-700", "animation-delay-800"][i]}`}
@@ -247,25 +250,25 @@ export default function HomePage() {
           {[
             {
               icon: FileText,
-              title: "Smart Chunking",
+              title: "Table-aware parsing",
               description:
-                "Heading-aware splitting preserves document structure. Each chunk is classified into categories for targeted retrieval.",
+                "Financial tables stay separate from prose so revenue and margin lines are not mixed into narrative chunks.",
               color: "text-blue-600",
               bg: "bg-blue-50",
             },
             {
               icon: Search,
-              title: "Category Filtering",
+              title: "File-scoped search",
               description:
-                "When analyzing financial health, we prioritize financial-performance chunks. For risks, we focus on risk-factors. Precision by design.",
+                "Each analysis only retrieves chunks from the documents you selected—no cross-file bleed in the same workspace.",
               color: "text-blue-600",
               bg: "bg-blue-50",
             },
             {
               icon: FileCheck,
-              title: "Source Citations",
+              title: "Verifiable citations",
               description:
-                "Every insight includes page citations. Verify findings in the original document—no black box.",
+                "Open the source PDF at the cited page in one click. See which documents and pages were used.",
               color: "text-blue-600",
               bg: "bg-blue-50",
             },

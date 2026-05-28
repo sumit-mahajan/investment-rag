@@ -7,23 +7,16 @@ import { DocumentService } from "@/lib/services/document.service";
 import { UnauthorizedError } from "@/lib/errors/domain-errors";
 import type { DeleteDocumentResult, RegisterDocumentResult } from "./types";
 
-/**
- * Delete a document and all associated resources
- * @param documentId - The ID of the document to delete
- * @returns Result indicating success or failure
- */
 export async function deleteDocumentAction(
-  documentId: string
+  fileId: string,
+  blobUrl?: string
 ): Promise<DeleteDocumentResult> {
   try {
     const { userId } = await auth();
-    
-    if (!userId) {
-      throw new UnauthorizedError("Authentication required");
-    }
+    if (!userId) throw new UnauthorizedError("Authentication required");
 
     const documentService = container.resolve(DocumentService);
-    await documentService.deleteDocument(userId, documentId);
+    await documentService.deleteFile(userId, fileId, blobUrl);
 
     revalidatePath("/dashboard");
     revalidatePath("/analyses");
@@ -41,34 +34,21 @@ export async function deleteDocumentAction(
   }
 }
 
-/**
- * Register an uploaded document and start processing
- * @param blobUrl - The Vercel Blob URL of the uploaded file
- * @param filename - The original filename
- * @returns Result with document ID or error
- */
 export async function registerDocumentAction(
   blobUrl: string,
   filename: string
 ): Promise<RegisterDocumentResult> {
   try {
     const { userId } = await auth();
-    
-    if (!userId) {
-      throw new UnauthorizedError("Authentication required");
-    }
+    if (!userId) throw new UnauthorizedError("Authentication required");
 
-    // Fetch the file from Vercel Blob
     const response = await fetch(blobUrl);
-    if (!response.ok) {
-      throw new Error("Failed to fetch uploaded file");
-    }
+    if (!response.ok) throw new Error("Failed to fetch uploaded file");
 
-    const arrayBuffer = await response.arrayBuffer();
-    const fileBuffer = Buffer.from(arrayBuffer);
+    const fileBuffer = Buffer.from(await response.arrayBuffer());
 
     const documentService = container.resolve(DocumentService);
-    const document = await documentService.registerDocument(userId, {
+    const file = await documentService.registerFile(userId, {
       blobUrl,
       filename,
       fileBuffer,
@@ -78,7 +58,7 @@ export async function registerDocumentAction(
 
     return {
       success: true,
-      data: { documentId: document.id },
+      data: { documentId: file.fileId, fileId: file.fileId },
     };
   } catch (error) {
     console.error("Register document error:", error);

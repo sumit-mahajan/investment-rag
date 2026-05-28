@@ -4,44 +4,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
-import { BarChart3, ArrowRight, FileText, TrendingUp, Clock } from "lucide-react";
+import { BarChart3, ArrowRight, Clock } from "lucide-react";
 import Link from "next/link";
-
-interface Analysis {
-  id: string;
-  documentId: string;
-  status: string;
-  verdict?: string | null;
-  confidenceScore?: string | null;
-  summary?: string | null;
-  createdAt: Date;
-  completedAt?: Date | null;
-  documentName: string;
-  companyName?: string | null;
-}
-
-const verdictStyles: Record<string, { bg: string; text: string; icon: string }> = {
-  POSITIVE: { 
-    bg: "bg-emerald-100", 
-    text: "text-emerald-700", 
-    icon: "text-emerald-600" 
-  },
-  NEGATIVE: { 
-    bg: "bg-rose-100", 
-    text: "text-rose-700", 
-    icon: "text-rose-600" 
-  },
-  NEUTRAL: { 
-    bg: "bg-slate-100", 
-    text: "text-slate-700", 
-    icon: "text-slate-600" 
-  },
-  MIXED: { 
-    bg: "bg-amber-100", 
-    text: "text-amber-700", 
-    icon: "text-amber-600" 
-  },
-};
+import type { Analysis } from "@/lib/types/domain-models";
 
 export function AnalysisList({ analyses }: { analyses: Analysis[] }) {
   if (analyses.length === 0) {
@@ -53,12 +18,10 @@ export function AnalysisList({ analyses }: { analyses: Analysis[] }) {
           </div>
           <h3 className="text-base sm:text-lg font-semibold text-slate-900 mb-2">No analyses yet</h3>
           <p className="text-xs sm:text-sm text-slate-500 text-center max-w-sm mb-6">
-            Run an analysis on a document to see your results here. Upload a document and start analyzing.
+            Run an analysis on a document to see your results here.
           </p>
           <Link href="/dashboard">
-            <Button className="bg-blue-600 hover:bg-blue-700 text-sm">
-              Go to Workspace
-            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700 text-sm">Go to Workspace</Button>
           </Link>
         </CardContent>
       </Card>
@@ -67,77 +30,42 @@ export function AnalysisList({ analyses }: { analyses: Analysis[] }) {
 
   return (
     <div className="space-y-3">
-      {analyses.map((analysis) => {
-        const verdictStyle = analysis.verdict ? verdictStyles[analysis.verdict] : null;
-        
-        return (
-          <Link
-            key={analysis.id}
-            href={`/analyses/${analysis.id}`}
-            className="block group"
-          >
-            <Card className="border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
-              <CardContent className="p-4 sm:p-5">
-                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
-                  <div className="flex items-start gap-3 flex-1 min-w-0">
-                    <div className={`p-2 sm:p-2.5 rounded-lg shrink-0 ${verdictStyle?.bg || 'bg-blue-50'}`}>
-                      <BarChart3 className={`w-4 h-4 sm:w-5 sm:h-5 ${verdictStyle?.icon || 'text-blue-600'}`} />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate group-hover:text-blue-600 transition-colors">
-                        {analysis.companyName || analysis.documentName}
-                      </h3>
-                      {analysis.companyName && (
-                        <p className="text-xs sm:text-sm text-slate-500 truncate mt-0.5">
-                          {analysis.documentName}
-                        </p>
-                      )}
-                      {analysis.summary && analysis.status === "completed" && (
-                        <p className="text-xs sm:text-sm text-slate-600 line-clamp-2 mt-2">
-                          {analysis.summary}
-                        </p>
-                      )}
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-slate-500">
-                        <span>{formatDateTime(analysis.createdAt)}</span>
-                        {analysis.confidenceScore && (
-                          <>
-                            <span className="hidden xs:inline">•</span>
-                            <span>
-                              Confidence: {(parseFloat(analysis.confidenceScore) * 100).toFixed(0)}%
-                            </span>
-                          </>
-                        )}
-                      </div>
-                    </div>
+      {analyses.map((analysis) => (
+        <Link key={analysis.id} href={`/analyses/${analysis.id}`} className="block group">
+          <Card className="border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-blue-200 transition-all">
+            <CardContent className="p-4 sm:p-5">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="p-2 rounded-lg bg-blue-50 shrink-0">
+                    <BarChart3 className="w-5 h-5 text-blue-600" />
                   </div>
-
-                  <div className="flex items-center justify-between sm:justify-end gap-2 shrink-0 pl-9 sm:pl-0">
-                    <div className="flex items-center gap-2">
-                      {analysis.verdict && (
-                        <Badge className={`${verdictStyle?.bg} ${verdictStyle?.text} border-0 text-xs`}>
-                          {analysis.verdict}
-                        </Badge>
-                      )}
-                      {analysis.status === "running" && (
-                        <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">
-                          <Clock className="w-3 h-3 mr-1 animate-spin" />
-                          Running
-                        </Badge>
-                      )}
-                      {analysis.status === "pending" && (
-                        <Badge className="bg-slate-100 text-slate-700 border-0 text-xs">
-                          Pending
-                        </Badge>
-                      )}
-                    </div>
-                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" />
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm sm:text-base text-slate-900 truncate group-hover:text-blue-600">
+                      {analysis.label}
+                    </h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {formatDateTime(analysis.createdAt)}
+                    </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          </Link>
-        );
-      })}
+                <div className="flex items-center gap-2 shrink-0">
+                  {analysis.status === "running" ? (
+                    <Badge className="bg-amber-100 text-amber-700 border-0 text-xs">
+                      <Clock className="w-3 h-3 mr-1 animate-spin" />
+                      Running
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">
+                      Completed
+                    </Badge>
+                  )}
+                  <ArrowRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </Link>
+      ))}
     </div>
   );
 }

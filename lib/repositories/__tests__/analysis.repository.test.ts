@@ -29,8 +29,8 @@ describe("AnalysisRepository", () => {
       expect(typeof repository.findByUserId).toBe("function");
     });
 
-    it("should have updateStatus method", () => {
-      expect(typeof repository.updateStatus).toBe("function");
+    it("should have updateResult method", () => {
+      expect(typeof repository.updateResult).toBe("function");
     });
 
     it("should have delete method", () => {

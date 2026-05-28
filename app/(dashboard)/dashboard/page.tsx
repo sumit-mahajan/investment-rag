@@ -3,10 +3,7 @@ import { redirect } from "next/navigation";
 import { container } from "@/lib/di";
 import { DocumentService } from "@/lib/services/document.service";
 import { AnalysisService } from "@/lib/services/analysis.service";
-import {
-  Card,
-  CardContent,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -27,29 +24,22 @@ export default async function DashboardPage() {
   const documentService = container.resolve(DocumentService);
   const analysisService = container.resolve(AnalysisService);
 
-  // Fetch documents and analyses via services (not direct DB)
-  const [userDocuments, allAnalyses] = await Promise.all([
-    documentService.listUserDocuments(userId),
+  const [userFiles, allAnalyses] = await Promise.all([
+    documentService.listUserFiles(userId),
     analysisService.listUserAnalyses(userId),
   ]);
 
   const recentAnalyses = allAnalyses.slice(0, 3);
 
-  // Map to DocumentListItem (ensure totalChunks is number)
-  const documentListItems: DocumentListItem[] = userDocuments.map((doc) => ({
-    id: doc.id,
-    originalName: doc.originalName,
-    companyName: doc.companyName,
-    tickerSymbol: doc.tickerSymbol,
-    status: doc.status,
-    fileSize: doc.fileSize,
-    createdAt: doc.createdAt,
-    totalChunks: doc.totalChunks ?? 0,
+  const documentListItems: DocumentListItem[] = userFiles.map((f) => ({
+    id: f.fileId,
+    originalName: f.fileName,
+    status: f.status,
+    totalChunks: f.chunkCount ?? 0,
   }));
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">Workspace</h1>
         <p className="text-sm sm:text-base text-slate-600 mt-1">
@@ -57,15 +47,11 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {/* Main content grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-        {/* Documents section - takes 2 columns on large screens */}
         <div className="lg:col-span-2 space-y-5 sm:space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Documents</h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">Upload and manage financial reports</p>
-            </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Documents</h2>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5">Upload and manage financial reports</p>
           </div>
 
           <DocumentUploader />
@@ -78,13 +64,10 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        {/* Sidebar - Recent analyses */}
         <div className="space-y-5 sm:space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Recent Analyses</h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-0.5">Latest results</p>
-            </div>
+          <div>
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-900">Recent Analyses</h2>
+            <p className="text-xs sm:text-sm text-slate-600 mt-0.5">Latest results</p>
           </div>
 
           {recentAnalyses.length === 0 ? (
@@ -112,27 +95,21 @@ export default async function DashboardPage() {
                       <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-xs sm:text-sm text-slate-900 truncate group-hover:text-blue-600 transition-colors">
-                            {analysis.companyName || analysis.documentName}
+                            {analysis.label}
                           </p>
                           <p className="text-xs text-slate-500 mt-0.5">
                             {formatDate(analysis.createdAt)}
                           </p>
                         </div>
-                        {analysis.verdict && (
-                          <span
-                            className={`text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 ${
-                              analysis.verdict === "POSITIVE"
-                                ? "bg-emerald-100 text-emerald-700"
-                                : analysis.verdict === "NEGATIVE"
-                                  ? "bg-rose-100 text-rose-700"
-                                  : analysis.verdict === "MIXED"
-                                    ? "bg-amber-100 text-amber-700"
-                                    : "bg-slate-100 text-slate-700"
-                            }`}
-                          >
-                            {analysis.verdict}
-                          </span>
-                        )}
+                        <span
+                          className={`text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 ${
+                            analysis.status === "completed"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-amber-100 text-amber-700"
+                          }`}
+                        >
+                          {analysis.status}
+                        </span>
                       </div>
                     </CardContent>
                   </Card>

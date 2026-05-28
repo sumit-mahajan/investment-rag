@@ -19,8 +19,11 @@ export const DocumentUploadSchema = z.object({
 });
 
 export const AnalysisRequestSchema = z.object({
-  documentId: z.string().uuid(),
-  criteriaIds: z.array(z.string()).min(1).max(10),
+  fileIds: z.array(z.string().uuid()).min(1).optional(),
+  documentIds: z.array(z.string().uuid()).min(1).optional(),
+  question: z.string().max(500).optional(),
+}).refine((d) => (d.fileIds?.length ?? 0) > 0 || (d.documentIds?.length ?? 0) > 0, {
+  message: "At least one fileId or documentId is required",
 });
 
 export const QueryRequestSchema = z.object({

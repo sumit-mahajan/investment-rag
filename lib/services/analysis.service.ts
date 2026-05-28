@@ -1,230 +1,93 @@
 import { injectable } from "tsyringe";
 import { AnalysisRepository } from "@/lib/repositories/analysis.repository";
-import { AnalysisCriteriaRepository } from "@/lib/repositories/analysis-criteria.repository";
-import { DocumentRepository } from "@/lib/repositories/document.repository";
 import { runFinancialAnalysis } from "@/lib/agents/financial-analyzer";
-import { withTransaction } from "@/lib/repositories/base.repository";
-import type {
-  CreateAnalysisDTO,
-  CreateAnalysisCriterionDTO,
-  AnalysisFiltersDTO,
-} from "@/lib/types/dtos";
-import type { Analysis, AnalysisCriterion } from "@/lib/types/domain-models";
-import {
-  NotFoundError,
-  ValidationError,
-  ProcessingError,
-} from "@/lib/errors/domain-errors";
+import { listUserFiles } from "@/lib/vectorstore/operations";
+import type { AnalysisFiltersDTO } from "@/lib/types/dtos";
+import type { Analysis } from "@/lib/types/domain-models";
+import { DEFAULT_ANALYSIS_QUESTION } from "@/lib/agents/constants";
+import { NotFoundError, ValidationError, ProcessingError } from "@/lib/errors/domain-errors";
 
-/**
- * Service for analysis operations
- */
 @injectable()
 export class AnalysisService {
-  constructor(
-    private readonly analysisRepo: AnalysisRepository,
-    private readonly criteriaRepo: AnalysisCriteriaRepository,
-    private readonly documentRepo: DocumentRepository
-  ) {}
+  constructor(private readonly analysisRepo: AnalysisRepository) {}
 
-  /**
-   * Start a new financial analysis
-   */
   async startAnalysis(
     userId: string,
-    documentId: string,
-    criteriaIds: string[],
-    criteriaConfig: Record<string, any>
+    fileIds: string[],
+    question: string
   ): Promise<Analysis> {
-    // Verify document exists and belongs to user
-    const document = await this.documentRepo.findByIdAndUserId(
-      documentId,
-      userId
-    );
-
-    if (!document) {
-      throw new NotFoundError("Document", documentId);
+    if (fileIds.length === 0) {
+      throw new ValidationError("At least one document must be provided");
     }
+    const resolvedQuestion = question?.trim() || DEFAULT_ANALYSIS_QUESTION;
 
-    if (document.status !== "completed") {
-      throw new ValidationError("Document processing not completed");
-    }
+    const userFiles = await listUserFiles(userId);
+    const fileMap = new Map(userFiles.map((f) => [f.fileId, f]));
 
-    // Get criteria from config
-    const criteria = criteriaIds
-      .map((id) => criteriaConfig[id])
-      .filter(Boolean);
+    const documents = fileIds.map((fileId) => {
+      const file = fileMap.get(fileId);
+      if (!file) throw new NotFoundError("Document", fileId);
+      if (file.status !== "completed") {
+        throw new ValidationError(`File "${file.fileName}" is not ready for analysis`);
+      }
+      return {
+        fileId: file.fileId,
+        fileName: file.fileName,
+        blobUrl: file.blobUrl,
+      };
+    });
 
-    if (criteria.length === 0) {
-      throw new ValidationError("No valid criteria provided");
-    }
+    const analysis = await this.analysisRepo.create({ userId, documents });
 
-    // Create analysis record
-    const analysisData: CreateAnalysisDTO = {
-      documentId,
-      userId,
-      status: "running",
-    };
-
-    const analysis = await this.analysisRepo.create(analysisData);
-
-    // Run analysis asynchronously (don't await)
-    this.runAnalysisInBackground(
-      analysis.id,
-      documentId,
-      userId,
-      criteria
-    ).catch((error) => {
-      console.error("Analysis error:", error);
+    this.runInBackground(analysis.id, fileIds, userId, resolvedQuestion).catch((err) => {
+      console.error("Analysis background error:", err);
     });
 
     return analysis;
   }
 
-  /**
-   * Get all analyses for a user
-   */
   async listUserAnalyses(
     userId: string,
     filters?: AnalysisFiltersDTO
-  ): Promise<any[]> {
-    const analyses = await this.analysisRepo.findByUserId(userId, filters);
-
-    return analyses.map((analysis) => ({
-      id: analysis.id,
-      documentId: analysis.documentId,
-      status: analysis.status,
-      verdict: analysis.verdict,
-      confidenceScore: analysis.confidenceScore,
-      summary: analysis.summary,
-      createdAt: analysis.createdAt,
-      completedAt: analysis.completedAt,
-      documentName: analysis.document.originalName,
-      companyName: analysis.document.companyName,
-    }));
+  ): Promise<Analysis[]> {
+    return this.analysisRepo.findByUserId(userId, filters);
   }
 
-  /**
-   * Get a single analysis with criteria
-   */
-  async getAnalysis(
-    userId: string,
-    analysisId: string
-  ): Promise<Analysis & { criteria: AnalysisCriterion[] }> {
-    const analysis = await this.analysisRepo.findByIdAndUserId(
-      analysisId,
-      userId
-    );
-
-    if (!analysis) {
-      throw new NotFoundError("Analysis", analysisId);
-    }
-
-    const criteria = await this.criteriaRepo.findByAnalysisId(analysisId);
-
-    return {
-      ...analysis,
-      criteria,
-    };
+  async getAnalysis(userId: string, analysisId: string): Promise<Analysis> {
+    const analysis = await this.analysisRepo.findByIdAndUserId(analysisId, userId);
+    if (!analysis) throw new NotFoundError("Analysis", analysisId);
+    return analysis;
   }
 
-  /**
-   * Get analyses for a specific document
-   */
-  async getDocumentAnalyses(documentId: string): Promise<Analysis[]> {
-    return await this.analysisRepo.findByDocumentId(documentId);
-  }
-
-  /**
-   * Delete an analysis
-   */
   async deleteAnalysis(userId: string, analysisId: string): Promise<void> {
-    const analysis = await this.analysisRepo.findByIdAndUserId(
-      analysisId,
-      userId
-    );
-
-    if (!analysis) {
-      throw new NotFoundError("Analysis", analysisId);
-    }
-
-    await withTransaction(async (tx) => {
-      await this.criteriaRepo.deleteByAnalysisId(analysisId, tx);
-      await this.analysisRepo.delete(analysisId, tx);
-    });
+    const analysis = await this.analysisRepo.findByIdAndUserId(analysisId, userId);
+    if (!analysis) throw new NotFoundError("Analysis", analysisId);
+    await this.analysisRepo.delete(analysisId);
   }
 
-  /**
-   * Get analysis count for a user
-   */
   async getAnalysisCount(userId: string): Promise<number> {
-    return await this.analysisRepo.countByUserId(userId);
+    return this.analysisRepo.countByUserId(userId);
   }
 
-  /**
-   * Run analysis in background
-   */
-  private async runAnalysisInBackground(
+  private async runInBackground(
     analysisId: string,
-    documentId: string,
+    fileIds: string[],
     userId: string,
-    criteria: any[]
+    question: string
   ): Promise<void> {
     try {
-      console.log(`Starting analysis ${analysisId}`);
-
-      // Run the LangGraph agent
-      const result = await runFinancialAnalysis(documentId, userId, criteria);
-
-      console.log(`Analysis completed with verdict: ${result.verdict}`);
-
-      // Store criteria results and update analysis in a transaction
-      await withTransaction(async (tx) => {
-        // Store criteria results
-        const criteriaRecords: CreateAnalysisCriterionDTO[] = result.analyses.map(
-          (a) => ({
-            analysisId,
-            criterionId: a.criterionId,
-            criterionName: a.criterionName,
-            score: a.score.toString(),
-            findings: a.findings,
-            evidence: a.evidence as any,
-          })
-        );
-
-        await this.criteriaRepo.createBatch(criteriaRecords, tx);
-
-        // Store results: criteria + philosophies (value & growth investing)
-        const resultsPayload = {
-          criteria: result.analyses,
-          philosophies: result.philosophyAnalyses ?? [],
-        };
-
-        // Update analysis record
-        await this.analysisRepo.updateResults(
-          analysisId,
-          {
-            status: "completed",
-            verdict: result.verdict,
-            confidenceScore: result.confidenceScore?.toString(),
-            summary: result.summary,
-            results: resultsPayload as any,
-            sources: result.sources as any,
-            completedAt: new Date(),
-          },
-          tx
-        );
-      });
-
-      console.log(`Analysis ${analysisId} stored successfully`);
+      const { analysis, traceUrl } = await runFinancialAnalysis(
+        fileIds,
+        userId,
+        question
+      );
+      await this.analysisRepo.updateResult(analysisId, { result: analysis, traceUrl });
     } catch (error) {
-      console.error(`Analysis ${analysisId} failed:`, error);
-
-      await this.analysisRepo.updateStatus(analysisId, {
-        status: "failed",
-        error: error instanceof Error ? error.message : "Unknown error",
+      await this.analysisRepo.updateResult(analysisId, {
+        result: {
+          error: error instanceof Error ? error.message : "Unknown error",
+        },
       });
-
       throw new ProcessingError(
         `Analysis failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         error instanceof Error ? error : undefined

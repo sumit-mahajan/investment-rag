@@ -1,11 +1,11 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent } from "@clerk/nextjs/server";
-import { container } from "@/lib/di";
-import { UserService } from "@/lib/services/user.service";
 
+/**
+ * Clerk webhook — auth is handled by Clerk; no users table in Postgres.
+ */
 export async function POST(req: Request) {
-  const userService = container.resolve(UserService);
   const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
 
   if (!WEBHOOK_SECRET) {
@@ -18,61 +18,23 @@ export async function POST(req: Request) {
   const svix_signature = headerPayload.get("svix-signature");
 
   if (!svix_id || !svix_timestamp || !svix_signature) {
-    return new Response("Error occurred -- no svix headers", {
-      status: 400,
-    });
+    return new Response("Error occurred -- no svix headers", { status: 400 });
   }
 
   const payload = await req.json();
   const body = JSON.stringify(payload);
-
   const wh = new Webhook(WEBHOOK_SECRET);
 
-  let evt: WebhookEvent;
-
   try {
-    evt = wh.verify(body, {
+    wh.verify(body, {
       "svix-id": svix_id,
       "svix-timestamp": svix_timestamp,
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
     console.error("Error verifying webhook:", err);
-    return new Response("Error occurred", {
-      status: 400,
-    });
-  }
-
-  const eventType = evt.type;
-
-  if (eventType === "user.created" || eventType === "user.updated") {
-    const { id, email_addresses, first_name, last_name, image_url } = evt.data;
-
-    try {
-      await userService.syncUserFromWebhook({
-        id: id,
-        email: email_addresses[0].email_address,
-        firstName: first_name || undefined,
-        lastName: last_name || undefined,
-        imageUrl: image_url || undefined,
-      });
-    } catch (error) {
-      console.error(`Error ${eventType === "user.created" ? "creating" : "updating"} user:`, error);
-      return new Response(`Error ${eventType === "user.created" ? "creating" : "updating"} user`, { status: 500 });
-    }
-  }
-
-  if (eventType === "user.deleted") {
-    const { id } = evt.data;
-
-    try {
-      await userService.deleteUser(id!);
-    } catch (error) {
-      console.error("Error deleting user:", error);
-      return new Response("Error deleting user", { status: 500 });
-    }
+    return new Response("Error occurred", { status: 400 });
   }
 
   return new Response("", { status: 200 });
 }
-

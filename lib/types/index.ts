@@ -1,60 +1,33 @@
 /**
  * Central type exports
- * Import from @/lib/types for all application types
  */
 
-// Domain models (entities)
 export type {
-  Document,
-  DocumentChunk,
-  Analysis,
-  AnalysisCriterion,
-  User,
-  DocumentWithChunks,
-  AnalysisWithDetails,
-  DocumentListItem,
-} from "./domain-models";
+  FileRecord,
+  Chunk,
+  ChunkType,
+  ChunkMetadata,
+  RetrievedChunk,
+} from "./core";
 
-// Data transfer objects
-export type {
-  CreateDocumentDTO,
-  UpdateDocumentStatusDTO,
-  UpdateDocumentProcessingResultDTO,
-  DocumentFiltersDTO,
-  CreateDocumentChunkDTO,
-  CreateAnalysisDTO,
-  UpdateAnalysisStatusDTO,
-  UpdateAnalysisResultsDTO,
-  AnalysisFiltersDTO,
-  CreateAnalysisCriterionDTO,
-  CreateUserDTO,
-  UpsertUserDTO,
-  DocumentQueryDTO,
-} from "./dtos";
+export type { Analysis, Conversation, DocumentListItem } from "./domain-models";
 
-// RAG types
-export type {
-  ChunkingConfig,
-  EmbeddingConfig,
-  RetrievalConfig,
-  RAGConfig,
-  SearchResult,
-  HybridSearchResult,
-} from "./rag";
+export type { CreateAnalysisDTO, AnalysisFiltersDTO } from "./dtos";
 
-// Analysis workflow types
+export type { EmbeddingConfig } from "./rag";
+
 export type {
   AnalysisStatus,
-  Verdict,
-  CriteriaConfig,
-  CriterionAnalysis,
-  ChunkEvidence,
-  AnalysisWorkflow,
-  AnalysisRequest,
-  AnalysisResponse,
+  InvestmentAnalysis,
+  InvestmentVerdict,
+  InvestmentRecommendation,
+  Citation,
+  Metric,
+  CaseSection,
+  SourceDocument,
+  ExtractedMetric,
 } from "./analysis";
 
-// Evaluation types
 export type {
   EvaluationInput,
   RAGASMetrics,
@@ -90,3 +63,5 @@ export {
   isPrecisionDetails,
   isCorrectnessDetails,
 } from "./evaluation";
+
+export type { AnalysisDocumentRef, ConversationMessage } from "@/lib/db/schema";

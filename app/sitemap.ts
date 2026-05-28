@@ -1,23 +1,22 @@
 import { MetadataRoute } from "next";
-
-const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://investment-rag.vercel.app";
+import { siteUrl } from "@/lib/seo/site";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
-      url: baseUrl,
+      url: siteUrl,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 1,
     },
     {
-      url: `${baseUrl}/sign-in`,
+      url: `${siteUrl}/sign-in`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.5,
     },
     {
-      url: `${baseUrl}/sign-up`,
+      url: `${siteUrl}/sign-up`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.8,

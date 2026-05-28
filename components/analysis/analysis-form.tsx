@@ -1,114 +1,111 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CriteriaSelector } from "@/components/analysis/criteria-selector";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { startAnalysisAction } from "@/app/actions/analyses";
+import { DEFAULT_ANALYSIS_QUESTION } from "@/lib/agents/constants";
 import { toast } from "sonner";
 
 interface AnalysisFormProps {
-  documentId: string;
+  documentIds: string[];
+  /** When true, starts the LangGraph pipeline immediately on mount */
+  autoStart?: boolean;
 }
 
-export function AnalysisForm({ documentId }: AnalysisFormProps) {
+export function AnalysisForm({ documentIds, autoStart = true }: AnalysisFormProps) {
   const router = useRouter();
+  const [focusQuestion, setFocusQuestion] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisId, setAnalysisId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const autoStarted = useRef(false);
 
-  useEffect(() => {
-    if (analysisId) {
-      const interval = setInterval(() => {
-        checkAnalysisStatus(analysisId);
-      }, 3000);
+  const runAnalysis = useCallback(
+    async (question?: string) => {
+      if (documentIds.length === 0) return;
 
-      return () => clearInterval(interval);
-    }
-  }, [analysisId]);
+      setIsAnalyzing(true);
+      setError(null);
 
-  const handleAnalyze = async (criteriaIds: string[]) => {
-    setIsAnalyzing(true);
-    setError(null);
+      try {
+        const q = question?.trim() || focusQuestion.trim() || DEFAULT_ANALYSIS_QUESTION;
+        const result = await startAnalysisAction(documentIds, q);
 
-    try {
-      const result = await startAnalysisAction(documentId, criteriaIds);
-
-      if (result.success) {
-        setAnalysisId(result.data.analysisId);
-        toast.success("Analysis started");
-      } else {
-        setError(result.error);
-        toast.error(result.error);
+        if (result.success) {
+          toast.success("Analysis started — results will appear shortly");
+          router.push(`/analyses/${result.data.analysisId}`);
+          router.refresh();
+        } else {
+          setError(result.error ?? "Failed to start analysis");
+          toast.error(result.error ?? "Failed to start analysis");
+        }
+      } catch {
+        const msg = "Failed to start analysis";
+        setError(msg);
+        toast.error(msg);
+      } finally {
         setIsAnalyzing(false);
       }
-    } catch (error) {
-      console.error("Error starting analysis:", error);
-      const errorMessage = "Failed to start analysis";
-      setError(errorMessage);
-      toast.error(errorMessage);
-      setIsAnalyzing(false);
-    }
-  };
+    },
+    [documentIds, focusQuestion, router]
+  );
 
-  const checkAnalysisStatus = async (id: string) => {
-    try {
-      const response = await fetch(`/api/analyses/${id}`);
-      if (response.ok) {
-        const data = await response.json();
+  useEffect(() => {
+    if (!autoStart || autoStarted.current || documentIds.length === 0) return;
+    autoStarted.current = true;
+    void runAnalysis(DEFAULT_ANALYSIS_QUESTION);
+  }, [autoStart, documentIds, runAnalysis]);
 
-        if (data.status === "completed") {
-          setIsAnalyzing(false);
-          setAnalysisId(null);
-          toast.success("Analysis completed");
-          router.push(`/analyses/${data.id}`);
-        } else if (data.status === "failed") {
-          setError(data.error ?? "Analysis failed");
-          toast.error(data.error ?? "Analysis failed");
-          setIsAnalyzing(false);
-          setAnalysisId(null);
-        }
-      }
-    } catch (error) {
-      console.error("Error checking analysis status:", error);
-    }
-  };
-
-  if (error) {
+  if (autoStart && isAnalyzing && !error) {
     return (
-      <Card className="border-rose-200 bg-rose-50">
-        <CardContent className="py-4 sm:py-6 px-4 sm:px-6">
-          <p className="text-rose-700 font-medium text-sm sm:text-base mb-1">Analysis Failed</p>
-          <p className="text-xs sm:text-sm text-rose-600">{error}</p>
-          <p className="text-xs sm:text-sm text-slate-600 mt-2">
-            You can try running the analysis again with different criteria.
+      <Card className="border-blue-200 bg-blue-50/50">
+        <CardContent className="flex flex-col items-center justify-center py-10 px-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-600 mb-3" />
+          <p className="font-semibold text-slate-900">Running investment analysis…</p>
+          <p className="text-sm text-slate-600 mt-1 text-center max-w-md">
+            Extracting metrics, retrieving risks and catalysts, then synthesizing bull/bear
+            cases. This usually takes 30–90 seconds.
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  if (isAnalyzing) {
-    return (
-      <Card className="border-blue-200 bg-blue-50/50">
-        <CardContent className="flex items-center justify-center py-10 sm:py-12 px-4">
-          <div className="text-center">
-            <div className="p-3 sm:p-4 rounded-full bg-blue-100 inline-flex mb-4">
-              <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-blue-600" />
-            </div>
-            <p className="font-semibold text-sm sm:text-base text-slate-900 mb-2">Analyzing document...</p>
-            <p className="text-xs sm:text-sm text-slate-600">This may take a few minutes</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <CriteriaSelector
-      onAnalyze={handleAnalyze}
-      isAnalyzing={isAnalyzing}
-    />
+    <Card className="border-slate-200 bg-white shadow-sm">
+      <CardContent className="p-4 space-y-3">
+        <p className="text-sm text-slate-600">
+          The pipeline runs automatically: metrics → qualitative retrieval → synthesis →
+          citations. Optionally add a focus below for the next run.
+        </p>
+        <textarea
+          className="w-full rounded-md border border-slate-200 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          placeholder="Optional focus for this run (e.g. regulatory risk, margin trends)…"
+          value={focusQuestion}
+          onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+            setFocusQuestion(e.target.value)
+          }
+          rows={2}
+          disabled={isAnalyzing}
+        />
+        {error && <p className="text-sm text-red-600">{error}</p>}
+        <Button
+          onClick={() => runAnalysis()}
+          disabled={isAnalyzing || documentIds.length === 0}
+          className="w-full bg-blue-600 hover:bg-blue-700"
+        >
+          {isAnalyzing ? (
+            <>
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              Analyzing…
+            </>
+          ) : (
+            "Run analysis again"
+          )}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }

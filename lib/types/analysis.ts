@@ -1,75 +1,62 @@
 /**
- * Analysis workflow types
- * Used by agents, config, and API
+ * Analysis domain types — 4-node LangGraph pipeline (FEATURES.md)
  */
 
 export type AnalysisStatus = "pending" | "running" | "completed" | "failed";
 
-export type Verdict = "POSITIVE" | "NEGATIVE" | "NEUTRAL" | "MIXED";
+export type InvestmentRecommendation =
+  | "strong_buy"
+  | "buy"
+  | "hold"
+  | "caution"
+  | "avoid";
 
-/** Criteria definition (config) - what to analyze */
-export interface CriteriaConfig {
-  id: string;
-  name: string;
-  description: string;
-  categories: string[];
-  keyMetrics: string[];
-  promptTemplate: string;
+export interface Citation {
+  documentName: string;
+  pageNumber: number;
+  fileId?: string;
+  blobUrl?: string;
 }
 
-/** Result of analyzing one criterion */
-export interface CriterionAnalysis {
-  criterionId: string;
-  criterionName: string;
+/** Overall investment view — score is 0–100 (higher = more attractive to invest) */
+export interface InvestmentVerdict {
   score: number;
-  findings: string;
-  evidence: ChunkEvidence[];
+  recommendation: InvestmentRecommendation;
+  headline: string;
+  summary: string;
 }
 
-export interface ChunkEvidence {
-  chunkId: string;
-  content: string;
-  categories: string[];
-  pageNumber?: number;
-  relevanceScore: number;
+export interface Metric {
+  label: string;
+  value: string | null;
+  citation: Citation | null;
 }
 
-/** Analysis workflow state (agent) */
-export interface AnalysisWorkflow {
-  id: string;
-  documentId: string;
-  userId: string;
-  status: AnalysisStatus;
-  verdict?: Verdict;
-  confidenceScore?: number;
-  summary?: string;
-  results?: CriterionAnalysis[];
-  sources?: ChunkEvidence[];
-  error?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  completedAt?: Date;
+export interface CaseSection {
+  points: string[];
+  citations: Citation[];
 }
 
-export interface AnalysisRequest {
-  documentId: string;
-  criteriaIds: string[];
+/** Documents/pages actually retrieved during analysis */
+export interface SourceDocument {
+  fileId: string;
+  fileName: string;
+  blobUrl: string;
+  pages: number[];
+  usedInSections: string[];
 }
 
-export interface AnalysisResponse {
-  analysisId: string;
-  status: AnalysisStatus;
-  message?: string;
+export interface InvestmentAnalysis {
+  verdict: InvestmentVerdict;
+  bullCase: CaseSection;
+  bearCase: CaseSection;
+  keyMetrics: Metric[];
+  keyRisks: CaseSection;
+  sourcesUsed?: SourceDocument[];
 }
 
-/** Result of analyzing one investment philosophy (value or growth) */
-export interface PhilosophyAnalysis {
-  philosophyId: string;
-  philosophyName: string;
-  verdict: Verdict;
-  confidenceScore: number;
-  metricsFound: string[];
-  metricsNotFound: string[];
-  findings: string;
-  evidence: ChunkEvidence[];
+export interface ExtractedMetric {
+  label: string;
+  value: string | null;
+  chunks: import("./core").RetrievedChunk[];
 }

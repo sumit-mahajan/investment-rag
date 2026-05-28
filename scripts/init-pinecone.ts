@@ -8,7 +8,11 @@ import { Pinecone } from "@pinecone-database/pinecone";
 
 async function initPinecone() {
   const apiKey = process.env.PINECONE_API_KEY;
-  const indexName = process.env.PINECONE_INDEX_NAME || "investment-rag";
+  const indexName = process.env.PINECONE_INDEX_NAME;
+  if (!indexName) {
+    console.error("PINECONE_INDEX_NAME is not set");
+    process.exit(1);
+  }
 
   if (!apiKey) {
     console.error("PINECONE_API_KEY is not set");

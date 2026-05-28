@@ -1,61 +1,44 @@
 import { injectable } from "tsyringe";
-import { eq, desc, and, sql } from "drizzle-orm";
-import { analyses, documents } from "@/lib/db/schema";
+import { eq, desc, and } from "drizzle-orm";
+import { analyses, type AnalysisDocumentRef } from "@/lib/db/schema";
 import { BaseRepository, type Transaction } from "./base.repository";
-import type {
-  CreateAnalysisDTO,
-  UpdateAnalysisStatusDTO,
-  UpdateAnalysisResultsDTO,
-  AnalysisFiltersDTO,
-} from "@/lib/types/dtos";
-import type { Analysis, AnalysisWithDetails } from "@/lib/types/domain-models";
+import type { CreateAnalysisDTO, AnalysisFiltersDTO } from "@/lib/types/dtos";
+import type { Analysis } from "@/lib/types/domain-models";
 import { NotFoundError } from "@/lib/errors/domain-errors";
 
-/**
- * Repository for analysis operations
- */
 @injectable()
 export class AnalysisRepository extends BaseRepository {
-  /**
-   * Create a new analysis
-   */
   async create(data: CreateAnalysisDTO, tx?: Transaction): Promise<Analysis> {
     return this.execute("Create analysis", async () => {
       const client = this.getClient(tx);
-      const [analysis] = await client
+      const [row] = await client
         .insert(analyses)
         .values({
-          documentId: data.documentId,
           userId: data.userId,
-          status: data.status,
+          documents: data.documents,
+          result: null,
+          traceUrl: null,
           createdAt: new Date(),
-          updatedAt: new Date(),
         })
         .returning();
 
-      return analysis;
+      return this.toAnalysis(row);
     });
   }
 
-  /**
-   * Find an analysis by ID
-   */
   async findById(id: string, tx?: Transaction): Promise<Analysis | null> {
     return this.execute("Find analysis by ID", async () => {
       const client = this.getClient(tx);
-      const [analysis] = await client
+      const [row] = await client
         .select()
         .from(analyses)
         .where(eq(analyses.id, id))
         .limit(1);
 
-      return analysis || null;
+      return row ? this.toAnalysis(row) : null;
     });
   }
 
-  /**
-   * Find an analysis by ID and user ID (for ownership verification)
-   */
   async findByIdAndUserId(
     id: string,
     userId: string,
@@ -63,174 +46,54 @@ export class AnalysisRepository extends BaseRepository {
   ): Promise<Analysis | null> {
     return this.execute("Find analysis by ID and user ID", async () => {
       const client = this.getClient(tx);
-      const [analysis] = await client
+      const [row] = await client
         .select()
         .from(analyses)
         .where(and(eq(analyses.id, id), eq(analyses.userId, userId)))
         .limit(1);
 
-      return analysis || null;
+      return row ? this.toAnalysis(row) : null;
     });
   }
 
-  /**
-   * Find all analyses for a user
-   */
   async findByUserId(
     userId: string,
-    filters?: AnalysisFiltersDTO,
-    tx?: Transaction
-  ): Promise<AnalysisWithDetails[]> {
-    return this.execute("Find analyses by user ID", async () => {
-      const client = this.getClient(tx);
-
-      const conditions = [eq(analyses.userId, userId)];
-
-      if (filters?.status) {
-        conditions.push(eq(analyses.status, filters.status));
-      }
-
-      if (filters?.verdict) {
-        conditions.push(eq(analyses.verdict, filters.verdict));
-      }
-
-      const userAnalyses = await client
-        .select({
-          id: analyses.id,
-          documentId: analyses.documentId,
-          userId: analyses.userId,
-          status: analyses.status,
-          verdict: analyses.verdict,
-          confidenceScore: analyses.confidenceScore,
-          summary: analyses.summary,
-          results: analyses.results,
-          sources: analyses.sources,
-          error: analyses.error,
-          createdAt: analyses.createdAt,
-          updatedAt: analyses.updatedAt,
-          completedAt: analyses.completedAt,
-          document: {
-            id: documents.id,
-            userId: documents.userId,
-            filename: documents.filename,
-            originalName: documents.originalName,
-            fileUrl: documents.fileUrl,
-            fileSize: documents.fileSize,
-            mimeType: documents.mimeType,
-            documentType: documents.documentType,
-            jurisdiction: documents.jurisdiction,
-            companyName: documents.companyName,
-            tickerSymbol: documents.tickerSymbol,
-            cik: documents.cik,
-            filingType: documents.filingType,
-            filingDate: documents.filingDate,
-            fiscalYear: documents.fiscalYear,
-            fiscalPeriod: documents.fiscalPeriod,
-            sourceUrl: documents.sourceUrl,
-            status: documents.status,
-            processingError: documents.processingError,
-            totalChunks: documents.totalChunks,
-            isImageBased: documents.isImageBased,
-            createdAt: documents.createdAt,
-            updatedAt: documents.updatedAt,
-            processedAt: documents.processedAt,
-          },
-        })
-        .from(analyses)
-        .innerJoin(documents, eq(analyses.documentId, documents.id))
-        .where(and(...conditions))
-        .orderBy(desc(analyses.createdAt));
-
-      return userAnalyses.map((item) => ({
-        ...item,
-        criteria: [],
-      }));
-    });
-  }
-
-  /**
-   * Find analyses by document ID
-   */
-  async findByDocumentId(
-    documentId: string,
+    _filters?: AnalysisFiltersDTO,
     tx?: Transaction
   ): Promise<Analysis[]> {
-    return this.execute("Find analyses by document ID", async () => {
+    return this.execute("Find analyses by user ID", async () => {
       const client = this.getClient(tx);
-      const documentAnalyses = await client
+      const rows = await client
         .select()
         .from(analyses)
-        .where(eq(analyses.documentId, documentId))
+        .where(eq(analyses.userId, userId))
         .orderBy(desc(analyses.createdAt));
 
-      return documentAnalyses;
+      return rows.map((row) => this.toAnalysis(row));
     });
   }
 
-  /**
-   * Update analysis status
-   */
-  async updateStatus(
+  async updateResult(
     id: string,
-    data: UpdateAnalysisStatusDTO,
+    data: { result: unknown; traceUrl?: string },
     tx?: Transaction
   ): Promise<Analysis> {
-    return this.execute("Update analysis status", async () => {
+    return this.execute("Update analysis result", async () => {
       const client = this.getClient(tx);
-      const [analysis] = await client
+      const [row] = await client
         .update(analyses)
         .set({
-          status: data.status,
-          error: data.error,
-          updatedAt: new Date(),
+          result: data.result,
+          traceUrl: data.traceUrl ?? null,
         })
         .where(eq(analyses.id, id))
         .returning();
 
-      if (!analysis) {
-        throw new NotFoundError("Analysis", id);
-      }
-
-      return analysis;
+      if (!row) throw new NotFoundError("Analysis", id);
+      return this.toAnalysis(row);
     });
   }
 
-  /**
-   * Update analysis results
-   */
-  async updateResults(
-    id: string,
-    data: UpdateAnalysisResultsDTO,
-    tx?: Transaction
-  ): Promise<Analysis> {
-    return this.execute("Update analysis results", async () => {
-      const client = this.getClient(tx);
-      const [analysis] = await client
-        .update(analyses)
-        .set({
-          status: data.status,
-          verdict: data.verdict,
-          confidenceScore: data.confidenceScore,
-          summary: data.summary,
-          results: data.results,
-          sources: data.sources,
-          completedAt: data.completedAt,
-          updatedAt: new Date(),
-        })
-        .where(eq(analyses.id, id))
-        .returning();
-
-      if (!analysis) {
-        throw new NotFoundError("Analysis", id);
-      }
-
-      return analysis;
-    });
-  }
-
-  /**
-   * Delete an analysis
-   */
   async delete(id: string, tx?: Transaction): Promise<void> {
     return this.execute("Delete analysis", async () => {
       const client = this.getClient(tx);
@@ -238,46 +101,29 @@ export class AnalysisRepository extends BaseRepository {
     });
   }
 
-  /**
-   * Check if an analysis exists
-   */
-  async exists(id: string, tx?: Transaction): Promise<boolean> {
-    return this.execute("Check analysis exists", async () => {
-      const analysis = await this.findById(id, tx);
-      return analysis !== null;
-    });
-  }
-
-  /**
-   * Count analyses by user
-   */
   async countByUserId(userId: string, tx?: Transaction): Promise<number> {
     return this.execute("Count analyses by user", async () => {
-      const client = this.getClient(tx);
-      const [result] = await client
-        .select({ count: sql<number>`count(*)::int` })
-        .from(analyses)
-        .where(eq(analyses.userId, userId));
-
-      return result?.count || 0;
+      const rows = await this.findByUserId(userId, undefined, tx);
+      return rows.length;
     });
   }
 
-  /**
-   * Count analyses by document
-   */
-  async countByDocumentId(
-    documentId: string,
-    tx?: Transaction
-  ): Promise<number> {
-    return this.execute("Count analyses by document", async () => {
-      const client = this.getClient(tx);
-      const [result] = await client
-        .select({ count: sql<number>`count(*)::int` })
-        .from(analyses)
-        .where(eq(analyses.documentId, documentId));
-
-      return result?.count || 0;
-    });
+  private toAnalysis(row: typeof analyses.$inferSelect): Analysis {
+    const docs = (row.documents ?? []) as AnalysisDocumentRef[];
+    return {
+      id: row.id,
+      userId: row.userId,
+      documents: docs,
+      result: row.result,
+      traceUrl: row.traceUrl,
+      createdAt: row.createdAt,
+      status: row.result ? "completed" : "running",
+      fileIds: docs.map((d) => d.fileId),
+      documentCount: docs.length,
+      label:
+        docs.length > 1
+          ? `Multi-Doc (${docs.length})`
+          : (docs[0]?.fileName ?? "Analysis"),
+    };
   }
 }

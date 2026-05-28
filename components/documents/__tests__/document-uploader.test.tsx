@@ -1,19 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor } from "@/lib/__tests__/utils/render";
+import { render, screen, fireEvent } from "@/lib/__tests__/utils/render";
 import { DocumentUploader } from "../document-uploader";
 import { createMockFile } from "@/lib/__tests__/utils/test-data";
+import { toast } from "sonner";
 
-// Mock the register action
-vi.mock("@/app/actions/documents", () => ({
-  registerDocumentAction: vi.fn(),
-}));
-
-// Mock vercel blob upload
 vi.mock("@vercel/blob/client", () => ({
   upload: vi.fn(),
 }));
 
-// Mock sonner toast
 vi.mock("sonner", () => ({
   toast: {
     success: vi.fn(),
@@ -28,163 +22,147 @@ describe("DocumentUploader", () => {
 
   it("renders upload area", () => {
     render(<DocumentUploader />);
-    
+
     expect(screen.getByText(/Click to upload/)).toBeInTheDocument();
-    expect(screen.getByText("PDF files only (MAX. 50MB)")).toBeInTheDocument();
+    expect(screen.getByText(/PDF files only/)).toBeInTheDocument();
+    expect(screen.getByText(/Multiple files supported/)).toBeInTheDocument();
   });
 
   it("displays file input element", () => {
     render(<DocumentUploader />);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     expect(fileInput).toBeInTheDocument();
     expect(fileInput).toHaveAttribute("accept", "application/pdf");
+    expect(fileInput).toHaveAttribute("multiple");
   });
 
-  it("shows error for non-PDF files", () => {
+  it("toasts error for non-PDF files", () => {
     render(<DocumentUploader />);
-    
+
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = createMockFile("test.txt", "text/plain");
-    const fileList = Object.assign([file], { length: 1, item: (i: number) => (i === 0 ? file : null) });
-    
-    Object.defineProperty(fileInput, "files", {
-      value: fileList,
-      writable: false,
+    const fileList = Object.assign([file], {
+      length: 1,
+      item: (i: number) => (i === 0 ? file : null),
     });
-    
+
+    Object.defineProperty(fileInput, "files", { value: fileList, writable: false });
     fireEvent.change(fileInput);
-    
-    expect(screen.getByText("Only PDF files are allowed")).toBeInTheDocument();
+
+    expect(toast.error).toHaveBeenCalledWith("test.txt: Only PDF files are allowed");
+    expect(screen.queryByText("test.txt")).not.toBeInTheDocument();
   });
 
-  it("shows error for files exceeding size limit", () => {
+  it("toasts error for files exceeding size limit", () => {
     render(<DocumentUploader />);
-    
+
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const largeFile = createMockFile("large.pdf", "application/pdf", 60 * 1024 * 1024);
-    const fileList = Object.assign([largeFile], { length: 1, item: (i: number) => (i === 0 ? largeFile : null) });
-    
-    Object.defineProperty(fileInput, "files", {
-      value: fileList,
-      writable: false,
+    const fileList = Object.assign([largeFile], {
+      length: 1,
+      item: (i: number) => (i === 0 ? largeFile : null),
     });
-    
+
+    Object.defineProperty(fileInput, "files", { value: fileList, writable: false });
     fireEvent.change(fileInput);
-    
-    expect(screen.getByText("File size must be less than 50MB")).toBeInTheDocument();
+
+    expect(toast.error).toHaveBeenCalledWith("large.pdf: File size must be less than 50MB");
   });
 
-  it("accepts valid PDF file", () => {
+  it("accepts valid PDF file and shows upload button", () => {
     render(<DocumentUploader />);
-    
+
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const validFile = createMockFile("document.pdf", "application/pdf", 1024000);
-    const fileList = Object.assign([validFile], { length: 1, item: (i: number) => (i === 0 ? validFile : null) });
-    
-    Object.defineProperty(fileInput, "files", {
-      value: fileList,
-      writable: false,
+    const fileList = Object.assign([validFile], {
+      length: 1,
+      item: (i: number) => (i === 0 ? validFile : null),
     });
-    
+
+    Object.defineProperty(fileInput, "files", { value: fileList, writable: false });
     fireEvent.change(fileInput);
-    
+
     expect(screen.getByText("document.pdf")).toBeInTheDocument();
-    expect(screen.getByText("Upload and Process")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Upload Document/i })).toBeInTheDocument();
   });
 
   it("allows removing selected file", () => {
     render(<DocumentUploader />);
-    
+
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const validFile = createMockFile("document.pdf", "application/pdf");
-    const fileList = Object.assign([validFile], { length: 1, item: (i: number) => (i === 0 ? validFile : null) });
-    
-    Object.defineProperty(fileInput, "files", {
-      value: fileList,
-      writable: false,
+    const fileList = Object.assign([validFile], {
+      length: 1,
+      item: (i: number) => (i === 0 ? validFile : null),
     });
-    
+
+    Object.defineProperty(fileInput, "files", { value: fileList, writable: false });
     fireEvent.change(fileInput);
     expect(screen.getByText("document.pdf")).toBeInTheDocument();
-    
-    // Find and click the X button
-    const removeButtons = screen.getAllByRole("button");
-    const removeButton = removeButtons.find(btn => 
-      btn.querySelector('svg')?.classList.toString().includes('lucide-x')
-    );
-    
-    if (removeButton) {
-      fireEvent.click(removeButton);
-    }
-    
+
+    const removeButton = screen
+      .getAllByRole("button")
+      .find((btn) => !btn.textContent?.includes("Upload"));
+    expect(removeButton).toBeDefined();
+    fireEvent.click(removeButton!);
+
     expect(screen.queryByText("document.pdf")).not.toBeInTheDocument();
     expect(screen.getByText(/Click to upload/)).toBeInTheDocument();
   });
 
   it("displays file size in MB", () => {
     render(<DocumentUploader />);
-    
+
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     const file = createMockFile("document.pdf", "application/pdf", 2048000);
-    const fileList = Object.assign([file], { length: 1, item: (i: number) => (i === 0 ? file : null) });
-    
-    Object.defineProperty(fileInput, "files", {
-      value: fileList,
-      writable: false,
+    const fileList = Object.assign([file], {
+      length: 1,
+      item: (i: number) => (i === 0 ? file : null),
     });
-    
+
+    Object.defineProperty(fileInput, "files", { value: fileList, writable: false });
     fireEvent.change(fileInput);
-    
+
     expect(screen.getByText(/1.95 MB/)).toBeInTheDocument();
   });
 
-  it("clears error when valid file is selected after error", () => {
+  it("adds valid file after invalid file was rejected", () => {
     render(<DocumentUploader />);
-    
-    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    
-    // First, select invalid file
-    const invalidFile = createMockFile("test.txt", "text/plain");
-    const invalidFileList = Object.assign([invalidFile], { length: 1, item: (i: number) => (i === 0 ? invalidFile : null) });
-    Object.defineProperty(fileInput, "files", {
-      value: invalidFileList,
-      writable: false,
-      configurable: true,
-    });
-    fireEvent.change(fileInput);
-    expect(screen.getByText("Only PDF files are allowed")).toBeInTheDocument();
-    
-    // Then, select valid file (redefine files with configurable)
-    const validFile = createMockFile("document.pdf", "application/pdf");
-    const validFileList = Object.assign([validFile], { length: 1, item: (i: number) => (i === 0 ? validFile : null) });
-    Object.defineProperty(fileInput, "files", {
-      value: validFileList,
-      writable: false,
-      configurable: true,
-    });
-    fireEvent.change(fileInput);
-    
-    expect(screen.queryByText("Only PDF files are allowed")).not.toBeInTheDocument();
-    expect(screen.getByText("document.pdf")).toBeInTheDocument();
-  });
 
-  it("disables file input while uploading", async () => {
-    render(<DocumentUploader />);
-    
     const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
-    const validFile = createMockFile("document.pdf", "application/pdf");
-    const fileList = Object.assign([validFile], { length: 1, item: (i: number) => (i === 0 ? validFile : null) });
-    
-    Object.defineProperty(fileInput, "files", {
-      value: fileList,
-      writable: false,
-    });
-    
+
+    const invalidFile = createMockFile("test.txt", "text/plain");
+    Object.defineProperty(
+      fileInput,
+      "files",
+      {
+        value: Object.assign([invalidFile], {
+          length: 1,
+          item: (i: number) => (i === 0 ? invalidFile : null),
+        }),
+        writable: false,
+        configurable: true,
+      }
+    );
     fireEvent.change(fileInput);
-    
-    // The input should be disabled during upload
-    // Note: Full upload test would require mocking the upload function
-    expect(fileInput).toHaveAttribute("accept", "application/pdf");
+    expect(toast.error).toHaveBeenCalled();
+
+    const validFile = createMockFile("document.pdf", "application/pdf");
+    Object.defineProperty(
+      fileInput,
+      "files",
+      {
+        value: Object.assign([validFile], {
+          length: 1,
+          item: (i: number) => (i === 0 ? validFile : null),
+        }),
+        writable: false,
+        configurable: true,
+      }
+    );
+    fireEvent.change(fileInput);
+
+    expect(screen.getByText("document.pdf")).toBeInTheDocument();
   });
 });

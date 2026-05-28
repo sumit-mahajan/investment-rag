@@ -1,35 +1,34 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ToastProvider } from "@/components/providers/toast-provider";
+import { getOrganizationJsonLd } from "@/lib/seo/json-ld";
+import {
+  siteDescription,
+  siteKeywords,
+  siteName,
+  siteTitle,
+  siteUrl,
+} from "@/lib/seo/site";
 import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://investment-rag.vercel.app";
+const structuredData = getOrganizationJsonLd();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
+  applicationName: siteName,
   title: {
-    default: "Investment RAG - AI-Powered Financial Document Analysis",
-    template: "%s | Investment RAG",
+    default: siteTitle,
+    template: `%s | ${siteName}`,
   },
-  description:
-    "Upload 10-K filings, annual reports, quarterly reports, and investor presentations. Get instant AI-powered insights across financial health, risk assessment, growth potential, and more. Smart chunking, category-aware retrieval, and source citations.",
-  keywords: [
-    "financial document analysis",
-    "10-K analysis",
-    "SEC filings",
-    "annual report",
-    "AI investment research",
-    "RAG",
-    "document intelligence",
-    "earnings report",
-    "investor presentation",
-  ],
-  authors: [{ name: "Investment RAG" }],
-  creator: "Investment RAG",
-  publisher: "Investment RAG",
+  description: siteDescription,
+  keywords: [...siteKeywords],
+  authors: [{ name: siteName, url: siteUrl }],
+  creator: siteName,
+  publisher: siteName,
+  referrer: "origin-when-cross-origin",
   formatDetection: {
     email: false,
     address: false,
@@ -39,16 +38,14 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: siteUrl,
-    siteName: "Investment RAG",
-    title: "Investment RAG - AI-Powered Financial Document Analysis",
-    description:
-      "Upload financial documents and get instant AI-powered insights. Analyze 10-K filings, annual reports, and investor presentations across 6 criteria with source citations.",
+    siteName,
+    title: siteTitle,
+    description: siteDescription,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Investment RAG - AI-Powered Financial Document Analysis",
-    description:
-      "Upload financial documents and get instant AI-powered insights. Analyze 10-K filings, annual reports, and investor presentations.",
+    title: siteTitle,
+    description: siteDescription,
   },
   robots: {
     index: true,
@@ -65,12 +62,18 @@ export const metadata: Metadata = {
   category: "finance",
   appleWebApp: {
     capable: true,
-    title: "Investment RAG",
-    statusBarStyle: "default",
+    title: siteName,
+    statusBarStyle: "black-translucent",
   },
 };
 
 export const dynamic = "force-dynamic";
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export default function RootLayout({
   children,
@@ -81,6 +84,10 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <body className={inter.className}>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+          />
           {children}
           <ToastProvider />
         </body>

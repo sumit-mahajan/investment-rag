@@ -82,9 +82,11 @@ describe("DocumentService", () => {
 
 ## Current Test Coverage
 
-The testing infrastructure includes:
-- Example repository tests (document.repository.test.ts)
-- Example service tests (document.service.test.ts)
-- Test setup configuration (vitest.config.ts)
+- `lib/services/__tests__/` — document + analysis services
+- `lib/repositories/__tests__/` — analysis repository shape
+- `lib/agents/__tests__/` — metric validation utils
+- `lib/ingestion/__tests__/` — chunk identity
+- `app/api/__tests__/` — analyze + documents routes
+- `components/**/__tests__/` — uploader, list, analysis results
 
-You can expand these examples to cover more scenarios.
+Global setup sets a dummy `POSTGRES_URL` when unset so repository imports do not fail at load time.

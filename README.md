@@ -1,6 +1,6 @@
 # Investment RAG
 
-An AI-powered app that analyzes any financial document (10-K filings, annual reports, quarterly reports, etc.) from any jurisdiction and provides insights based on your selected criteria.
+An AI-powered app that ingests financial PDFs (10-K, annual reports, etc.) and produces structured investment analysis with cited metrics and bull/bear verdicts.
 
 ---
 
@@ -74,9 +74,14 @@ Without this token, document uploads will fail.
    ```env
    LANGCHAIN_API_KEY=lsv2_...
    ```
-4. Optionally set `LANGCHAIN_TRACING_V2=true` to enable tracing (LangChain SDK will send traces to LangSmith when the key is present).
+4. Enable tracing and RAGAS evaluation scripts:
+   ```env
+   LANGCHAIN_TRACING_V2=true
+   LANGCHAIN_PROJECT=investment-rag
+   ```
+5. Optional: `SHOW_LANGSMITH_TRACE=true` to show trace links in the analysis UI (developer-only).
 
-You can leave `LANGCHAIN_API_KEY` unset for a basic demo.
+You can leave `LANGCHAIN_API_KEY` unset for a basic demo without tracing.
 
 ### Step 3: Set Up Database
 
@@ -131,117 +136,51 @@ vercel --prod
 ### Overview
 
 ```
-User uploads PDF → Parse & Chunk → Assign Categories → Generate Embeddings → Store
-                                                                                ↓
-User runs analysis ← LLM generates verdict ← Filter by Categories ← Retrieve chunks
+Client uploads PDF → Vercel Blob → Register + ingest (LlamaParse → chunk → embed → Pinecone)
+                                                                              ↓
+User runs analysis ← 4-node LangGraph (metrics → qualitative RAG → synthesis → citations)
+                                                                              ↓
+                                    Postgres stores analysis result + optional conversation
 ```
 
-### Supported Document Types
+### Supported documents
 
-The app analyzes any financial report, including:
+- SEC filings (10-K, 10-Q), annual/quarterly reports (US, India, EU, etc.)
+- Investor presentations and earnings materials (PDF)
 
-- **SEC Filings**: 10-K, 10-Q, 8-K (US)
-- **Annual Reports**: From any jurisdiction (India, UK, EU, etc.)
-- **Quarterly Reports**: Any format
-- **Other Financial Documents**: Investor presentations, earnings reports
+### Ingestion
 
-### Content Categories
+1. **LlamaParse** — page-aware prose + markdown tables
+2. **Chunk** — prose/table chunks with `pageNumber`, `chunkType`
+3. **Embed** — Gemini `gemini-embedding-001` (768d)
+4. **Upsert** — Pinecone namespace = `userId`; doc registry in vector metadata
 
-Each chunk is automatically classified into one or more categories using keyword pattern matching:
+### Data stores
 
-| Category                | What It Captures                                              |
-| ----------------------- | ------------------------------------------------------------- |
-| `financial-performance` | Revenue, profit, margins, cash flow, balance sheet data       |
-| `risk-factors`          | Business risks, uncertainties, threats, exposures             |
-| `business-operations`   | Products, services, market position, operations               |
-| `management-governance` | Leadership, board, compensation, governance practices         |
-| `legal-regulatory`      | Legal proceedings, compliance, regulations, patents           |
-| `strategy-outlook`      | Growth plans, acquisitions, R&D, future initiatives           |
-| `general`               | Content that doesn't fit specific categories                  |
+| Postgres (`analyses`, `conversations`) | Pinecone |
+| -------------------------------------- | -------- |
+| Saved analysis JSON, chat history      | Chunks + embeddings; doc list via metadata |
 
-Categories enable **pre-filtering** during retrieval—when analyzing financial health, the system prioritizes `financial-performance` chunks; for risk assessment, it prioritizes `risk-factors` chunks.
-
-### Key Components
-
-#### 1. Document Processing Pipeline
-
-When you upload a PDF:
-
-1. **Parse**: Extract text from PDF using `pdf-parse`
-2. **Detect Headings**: Find document structure (any format, not 10-K specific)
-3. **Chunk**: Split into ~1500 token pieces with heading-aware boundaries
-4. **Classify**: Assign categories to each chunk using keyword patterns
-5. **Embed**: Convert chunks to 768-dimension vectors using Gemini embeddings
-6. **Store**: Save vectors + categories in Pinecone, full data in PostgreSQL
-
-#### 2. Two Databases (Why?)
-
-| PostgreSQL                                                  | Pinecone                             |
-| ----------------------------------------------------------- | ------------------------------------ |
-| Stores structured data (users, documents, analysis results) | Stores vector embeddings             |
-| Good for complex queries & relationships                    | Optimized for fast similarity search |
-| Source of truth for chunk text and categories               | Finds semantically similar content   |
-
-**Example**: When searching, Pinecone finds chunks that _mean_ the same thing as your query (even without exact keyword matches), then filters by category. PostgreSQL stores the full text and metadata.
-
-#### 3. Retrieval (RAG)
-
-When analyzing a document:
-
-1. **Hybrid Search**: Combines vector similarity + keyword matching
-2. **Category Filtering**: Pre-filters chunks by relevant categories
-3. **LLM Analysis**: Groq Llama 3.3 70B analyzes chunks against your criteria
-
-#### 4. Analysis Agent (LangGraph)
-
-The analysis runs as a 3-step workflow:
+### Analysis (LangGraph)
 
 ```
-Retrieve → Analyze → Synthesize
+metricExtraction → qualitativeRetrieval → synthesis → citationAssembly
 ```
 
-- **Retrieve**: Get relevant chunks (filtered by category)
-- **Analyze**: LLM extracts insights per criterion
-- **Synthesize**: Combine into final verdict with confidence score
+Dense retrieval scoped by `fileId`. Groq Llama 3.3 70B produces verdict, bull/bear, metrics, and risks with page citations.
 
-### Analysis Criteria
-
-The system evaluates documents against these criteria:
-
-| Criterion              | Categories Used                         |
-| ---------------------- | --------------------------------------- |
-| Financial Health       | `financial-performance`                 |
-| Risk Assessment        | `risk-factors`, `legal-regulatory`      |
-| Growth Potential       | `strategy-outlook`, `business-operations` |
-| Competitive Position   | `business-operations`, `strategy-outlook` |
-| Management Quality     | `management-governance`                 |
-| Regulatory Compliance  | `legal-regulatory`, `risk-factors`      |
-
-### Project Structure
+### Project structure
 
 ```
-app/                    # Next.js pages & API routes
-├── (auth)/            # Sign in/up pages (Clerk)
-├── (dashboard)/       # Protected pages (dashboard, documents, analysis)
-└── api/               # Backend endpoints
-
+app/                 # Next.js App Router + API routes
 lib/
-├── agents/            # LangGraph analysis workflow
-│   └── nodes/         # Retrieve, analyze, synthesize nodes
-├── db/                # Database schema (Drizzle ORM)
-├── rag/
-│   ├── chunking/      # Heading-aware document splitting
-│   ├── embeddings/    # Gemini embedding generation
-│   ├── metadata/      # Category classifier (keyword-based)
-│   └── retrieval/     # Hybrid search with category filtering
-├── parsers/           # PDF parsing, heading detection
-├── services/          # Document processor, retrieval service
-└── vectorstore/       # Pinecone operations
-
-components/            # React UI components
-config/
-├── criteria.config.ts # Analysis criteria with category mappings
-└── rag.config.ts      # Chunking, embedding, retrieval settings
+├── ingestion/       # parse → chunk → embed → upsert
+├── retrieval/       # Pinecone vector query
+├── agents/          # LangGraph graph + nodes
+├── services/        # Document, analysis, conversation
+├── repositories/    # analyses + conversations (Drizzle)
+└── vectorstore/     # Pinecone client
+components/          # React UI
 ```
 
 ### Cost Per Analysis
@@ -274,7 +213,7 @@ _100% free within generous tier limits (1000s of requests/day)_
 - **Auth**: Clerk
 - **Database**: PostgreSQL (Drizzle ORM)
 - **Vector DB**: Pinecone
-- **AI**: LangChain, LangGraph, Groq (Llama 3.3 70B), Google Gemini (embeddings)
+- **AI**: LangChain, LangGraph, LlamaParse, Groq (Llama 3.3 70B), Google Gemini (embeddings), LangSmith (optional)
 - **Deployment**: Vercel
 
 ---

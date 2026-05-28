@@ -3,6 +3,46 @@ import { ImageResponse } from "next/og";
 export const size = { width: 32, height: 32 };
 export const contentType = "image/png";
 
+function BrandMark({ w }: { w: number }) {
+  const stroke = Math.max(1.6, w * 0.09);
+  return (
+    <svg
+      width={w}
+      height={w}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden
+    >
+      <path
+        d="M7 3h8l4 4v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Z"
+        stroke="white"
+        strokeWidth={stroke}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M15 3v4h4"
+        stroke="#7dd3fc"
+        strokeWidth={stroke}
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8 14h8M8 17h5"
+        stroke="white"
+        strokeOpacity={0.85}
+        strokeWidth={stroke}
+        strokeLinecap="round"
+      />
+      <path
+        d="M14.5 12.5 16.5 14.5 21 10"
+        stroke="#34d399"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 export default function Icon() {
   return new ImageResponse(
     (
@@ -13,26 +53,11 @@ export default function Icon() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-          borderRadius: 8,
+          background: "linear-gradient(145deg, #020617 0%, #0f172a 45%, #1d4ed8 120%)",
+          borderRadius: 9,
         }}
       >
-        <svg
-          width="18"
-          height="18"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="white"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <line x1="10" y1="9" x2="8" y2="9" />
-        </svg>
+        <BrandMark w={20} />
       </div>
     ),
     { ...size }

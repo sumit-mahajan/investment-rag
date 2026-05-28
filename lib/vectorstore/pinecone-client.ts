@@ -17,6 +17,9 @@ export function getPineconeClient(): Pinecone {
 }
 
 export function getIndex() {
-  const indexName = process.env.PINECONE_INDEX_NAME || "investment-rag";
+  const indexName = process.env.PINECONE_INDEX_NAME;
+  if (!indexName) {
+    throw new Error("PINECONE_INDEX_NAME is not set");
+  }
   return getPineconeClient().index(indexName);
 }

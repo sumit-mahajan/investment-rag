@@ -3,4 +3,4 @@ export type ActionResult<T = void> =
   | { success: false; error: string };
 
 export type DeleteDocumentResult = ActionResult<{ message: string }>;
-export type RegisterDocumentResult = ActionResult<{ documentId: string }>;
+export type RegisterDocumentResult = ActionResult<{ documentId: string; fileId: string }>;

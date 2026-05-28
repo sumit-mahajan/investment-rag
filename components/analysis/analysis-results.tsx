@@ -2,230 +2,338 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, AlertTriangle, TrendingUp, Shield, Target, Users, Scale, BarChart3, Coins, Sparkles } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  BarChart3,
+  AlertTriangle,
+  FileText,
+  ExternalLink,
+} from "lucide-react";
+import type {
+  Citation,
+  InvestmentAnalysis,
+  InvestmentRecommendation,
+  SourceDocument,
+} from "@/lib/types/analysis";
+import type { AnalysisDocumentRef } from "@/lib/db/schema";
 
-interface PhilosophyResult {
-  philosophyId: string;
-  philosophyName: string;
-  verdict: string;
-  confidenceScore: number;
-  metricsFound: string[];
-  metricsNotFound: string[];
-  findings: string;
+function isInvestmentAnalysis(value: unknown): value is InvestmentAnalysis {
+  if (!value || typeof value !== "object") return false;
+  const v = value as InvestmentAnalysis;
+  return (
+    v.verdict != null &&
+    typeof v.verdict.score === "number" &&
+    Array.isArray(v.bullCase?.points) &&
+    Array.isArray(v.bearCase?.points) &&
+    Array.isArray(v.keyMetrics) &&
+    Array.isArray(v.keyRisks?.points)
+  );
+}
+
+const RECOMMENDATION_LABELS: Record<InvestmentRecommendation, string> = {
+  strong_buy: "Strong Buy",
+  buy: "Buy",
+  hold: "Hold",
+  caution: "Caution",
+  avoid: "Avoid",
+};
+
+const RECOMMENDATION_STYLES: Record<InvestmentRecommendation, string> = {
+  strong_buy: "bg-emerald-600 text-white",
+  buy: "bg-emerald-100 text-emerald-800 border-emerald-300",
+  hold: "bg-amber-100 text-amber-800 border-amber-300",
+  caution: "bg-orange-100 text-orange-800 border-orange-300",
+  avoid: "bg-rose-100 text-rose-800 border-rose-300",
+};
+
+function citationHref(
+  citation: Citation,
+  documents: AnalysisDocumentRef[]
+): string | null {
+  const fileId =
+    citation.fileId ??
+    documents.find((d) => d.fileName === citation.documentName)?.fileId;
+  if (!fileId) return citation.blobUrl ? `${citation.blobUrl}#page=${citation.pageNumber}` : null;
+  return `/api/documents/${fileId}/view?page=${citation.pageNumber}`;
 }
 
 interface AnalysisResultsProps {
-  analysis: {
-    verdict?: string | null;
-    confidenceScore?: string | null;
-    summary?: string | null;
-    results?: Array<{
-      criterionName: string;
-      score: number;
-      findings: string;
-    }>;
-    philosophies?: PhilosophyResult[];
-  };
+  result: unknown;
+  traceUrl?: string | null;
+  documents?: AnalysisDocumentRef[];
 }
 
-const criterionIcons: Record<string, any> = {
-  "Financial Health": BarChart3,
-  "Risk Assessment": Shield,
-  "Growth Potential": TrendingUp,
-  "Competitive Position": Target,
-  "Management Quality": Users,
-  "Regulatory Compliance": Scale,
-};
+function CitationBadge({
+  citation,
+  documents,
+}: {
+  citation: Citation;
+  documents: AnalysisDocumentRef[];
+}) {
+  const href = citationHref(citation, documents);
+  const label = `${citation.documentName} p.${citation.pageNumber}`;
 
-const philosophyIcons: Record<string, any> = {
-  "Value Investing": Coins,
-  "Growth Investing": Sparkles,
-};
+  if (!href) {
+    return (
+      <Badge variant="outline" className="text-xs font-normal gap-1">
+        <FileText className="w-3 h-3" />
+        {label}
+      </Badge>
+    );
+  }
 
-const getScoreColor = (score: number) => {
-  if (score >= 0.7) return { bg: "bg-emerald-100", text: "text-emerald-700", bar: "bg-emerald-600" };
-  if (score >= 0.5) return { bg: "bg-amber-100", text: "text-amber-700", bar: "bg-amber-600" };
-  return { bg: "bg-rose-100", text: "text-rose-700", bar: "bg-rose-600" };
-};
+  return (
+    <a href={href} target="_blank" rel="noopener noreferrer">
+      <Badge
+        variant="outline"
+        className="text-xs font-normal gap-1 cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-colors"
+      >
+        <FileText className="w-3 h-3" />
+        {label}
+        <ExternalLink className="w-2.5 h-2.5 opacity-60" />
+      </Badge>
+    </a>
+  );
+}
 
-export function AnalysisResults({ analysis }: AnalysisResultsProps) {
-  const verdictStyles: Record<string, { bg: string; text: string; icon: any }> = {
-    POSITIVE: { bg: "bg-emerald-100", text: "text-emerald-700", icon: CheckCircle2 },
-    NEGATIVE: { bg: "bg-rose-100", text: "text-rose-700", icon: AlertTriangle },
-    NEUTRAL: { bg: "bg-slate-100", text: "text-slate-700", icon: BarChart3 },
-    MIXED: { bg: "bg-amber-100", text: "text-amber-700", icon: AlertTriangle },
-  };
+function scoreColor(score: number): string {
+  if (score >= 70) return "text-emerald-600";
+  if (score >= 50) return "text-amber-600";
+  return "text-rose-600";
+}
 
-  const verdictStyle = analysis.verdict ? verdictStyles[analysis.verdict] : null;
-  const VerdictIcon = verdictStyle?.icon;
+export function AnalysisResults({
+  result,
+  traceUrl,
+  documents = [],
+}: AnalysisResultsProps) {
+  if (!isInvestmentAnalysis(result)) {
+    return (
+      <Card className="border-rose-200 bg-rose-50/50">
+        <CardContent className="py-6 px-4">
+          <p className="text-sm text-rose-700">Unable to display analysis results.</p>
+          <p className="text-xs text-slate-500 mt-2">
+            Re-run analysis to generate the updated report format with investment score.
+          </p>
+          {"error" in (result as object) && (
+            <p className="text-xs text-rose-600 mt-2">
+              {(result as { error: string }).error}
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const analysis = result;
+  const { verdict } = analysis;
+  const rec = verdict.recommendation;
 
   return (
     <div className="space-y-6">
-      {/* Overall Verdict */}
-      <Card className="border-slate-200 bg-white shadow-sm">
-        <CardHeader className="pb-4 px-4 sm:px-6">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div className="flex-1">
-              <CardTitle className="text-base sm:text-lg text-slate-900 mb-2">Overall Verdict</CardTitle>
-              {analysis.confidenceScore && (
-                <div className="flex items-center gap-2 text-xs sm:text-sm text-slate-600">
-                  <span>Confidence Score:</span>
-                  <span className="font-semibold text-slate-900">
-                    {(parseFloat(analysis.confidenceScore) * 100).toFixed(0)}%
-                  </span>
-                </div>
-              )}
-            </div>
-            {analysis.verdict && verdictStyle && VerdictIcon && (
-              <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${verdictStyle.bg} self-start`}>
-                <VerdictIcon className={`w-4 h-4 ${verdictStyle.text}`} />
-                <span className={`text-xs sm:text-sm font-semibold ${verdictStyle.text}`}>
-                  {analysis.verdict}
-                </span>
+      {traceUrl && (
+        <a
+          href={traceUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-600"
+        >
+          Developer: LangSmith trace
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      )}
+
+      <Card className="border-slate-200 bg-gradient-to-br from-slate-50 to-white shadow-sm">
+        <CardContent className="p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
+            <div className="flex items-center gap-4">
+              <div
+                className={`text-4xl sm:text-5xl font-bold tabular-nums ${scoreColor(verdict.score)}`}
+              >
+                {Math.round(verdict.score)}
               </div>
-            )}
+              <div>
+                <p className="text-xs uppercase tracking-wide text-slate-500 font-medium">
+                  Investment score
+                </p>
+                <Badge
+                  className={`mt-1 text-sm font-semibold border ${RECOMMENDATION_STYLES[rec]}`}
+                >
+                  {RECOMMENDATION_LABELS[rec]}
+                </Badge>
+              </div>
+            </div>
+            <div className="flex-1 min-w-0 border-t sm:border-t-0 sm:border-l border-slate-200 pt-4 sm:pt-0 sm:pl-6">
+              <p className="font-semibold text-slate-900">{verdict.headline}</p>
+              <p className="text-sm text-slate-600 mt-2 leading-relaxed">{verdict.summary}</p>
+            </div>
           </div>
-        </CardHeader>
-        <CardContent className="px-4 sm:px-6">
-          <p className="text-xs sm:text-sm leading-relaxed text-slate-700">{analysis.summary}</p>
+          <p className="text-xs text-slate-400 mt-4">
+            Score is model-generated from uploaded documents only — not financial advice.
+          </p>
         </CardContent>
       </Card>
 
-      {/* Investment Philosophy Analysis (Value & Growth) */}
-      {analysis.philosophies && analysis.philosophies.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-slate-900">Investment Philosophy Fit</h2>
-          <p className="text-xs sm:text-sm text-slate-600">
-            Analysis from value and growth investing perspectives. Metrics are extracted from the document when available.
-          </p>
-          <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-            {analysis.philosophies.map((phil) => {
-              const verdictStyles: Record<string, { bg: string; text: string }> = {
-                POSITIVE: { bg: "bg-emerald-100", text: "text-emerald-700" },
-                NEGATIVE: { bg: "bg-rose-100", text: "text-rose-700" },
-                NEUTRAL: { bg: "bg-slate-100", text: "text-slate-700" },
-                MIXED: { bg: "bg-amber-100", text: "text-amber-700" },
-              };
-              const vs = phil.verdict ? verdictStyles[phil.verdict] ?? verdictStyles.NEUTRAL : verdictStyles.NEUTRAL;
-              const Icon = philosophyIcons[phil.philosophyName] ?? BarChart3;
-              const hasMetrics = phil.metricsFound.length > 0;
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="border-emerald-200 bg-emerald-50/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-emerald-800">
+              <TrendingUp className="w-4 h-4" />
+              Bull Case
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analysis.bullCase.points.length === 0 ? (
+              <p className="text-sm text-slate-500 italic">No bull case points identified.</p>
+            ) : (
+              <ul className="space-y-2 text-sm text-slate-700">
+                {analysis.bullCase.points.map((point, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-emerald-600 shrink-0">•</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-rose-200 bg-rose-50/30">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-rose-800">
+              <TrendingDown className="w-4 h-4" />
+              Bear Case
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {analysis.bearCase.points.length === 0 ? (
+              <p className="text-sm text-slate-500 italic">No bear case points identified.</p>
+            ) : (
+              <ul className="space-y-2 text-sm text-slate-700">
+                {analysis.bearCase.points.map((point, i) => (
+                  <li key={i} className="flex gap-2">
+                    <span className="text-rose-600 shrink-0">•</span>
+                    <span>{point}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-slate-200">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <BarChart3 className="w-4 h-4 text-blue-600" />
+            Key Metrics
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {analysis.keyMetrics.map((metric) => {
+              const missing =
+                metric.value === null ||
+                metric.value.trim().toLowerCase() === "null";
               return (
-                <Card
-                  key={phil.philosophyId}
-                  className="border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
+                <div
+                  key={metric.label}
+                  className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1 py-2 border-b border-slate-100 last:border-0"
                 >
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="space-y-4">
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="p-2 rounded-lg bg-slate-100 shrink-0">
-                            <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-sm sm:text-base text-slate-900">{phil.philosophyName}</h3>
-                          </div>
-                        </div>
-                        <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-1 pl-9 sm:pl-0">
-                          <Badge className={`${vs.bg} ${vs.text} border-0 text-xs sm:text-sm font-semibold px-2 sm:px-3 py-0.5 sm:py-1`}>
-                            {phil.verdict}
-                          </Badge>
-                          <span className="text-xs text-slate-500">
-                            Confidence: {(phil.confidenceScore * 100).toFixed(0)}%
-                          </span>
-                        </div>
+                  <span className="text-sm font-medium text-slate-800">{metric.label}</span>
+                  <div className="text-sm text-slate-600 text-left sm:text-right">
+                    {missing ? (
+                      <span className="italic text-slate-400">
+                        Not found in uploaded documents
+                      </span>
+                    ) : (
+                      <span>{metric.value}</span>
+                    )}
+                    {!missing && metric.citation && (
+                      <div className="mt-1 flex justify-start sm:justify-end">
+                        <CitationBadge citation={metric.citation} documents={documents} />
                       </div>
-                      {hasMetrics ? (
-                        <div className="space-y-2">
-                          <p className="text-xs font-medium text-slate-600">Metrics found</p>
-                          <ul className="text-xs sm:text-sm text-slate-700 space-y-1">
-                            {phil.metricsFound.map((m, i) => (
-                              <li key={i} className="flex items-start gap-1.5">
-                                <CheckCircle2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-600 shrink-0 mt-0.5" />
-                                {m}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
-                      ) : (
-                        <p className="text-xs sm:text-sm text-amber-700 bg-amber-50 px-3 py-2 rounded-md">
-                          No key metrics found in document. Verdict based on limited information.
-                        </p>
-                      )}
-                      {phil.metricsNotFound.length > 0 && (
-                        <div className="space-y-1">
-                          <p className="text-xs font-medium text-slate-500">Not found</p>
-                          <p className="text-xs text-slate-500">{phil.metricsNotFound.join(", ")}</p>
-                        </div>
-                      )}
-                      <div className="pt-2 border-t border-slate-100">
-                        <p className="text-xs sm:text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-                          {phil.findings}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
-        </div>
-      )}
+        </CardContent>
+      </Card>
 
-      {/* Detailed Results */}
-      {analysis.results && analysis.results.length > 0 && (
-        <div className="space-y-4">
-          <h2 className="text-base sm:text-lg font-semibold text-slate-900">Detailed Analysis</h2>
-          
-          <div className="grid gap-4">
-            {analysis.results.map((result, index) => {
-              const scoreColor = getScoreColor(result.score);
-              const Icon = criterionIcons[result.criterionName] || BarChart3;
-              
-              return (
-                <Card 
-                  key={index}
-                  className="border-slate-200 bg-white shadow-sm hover:shadow-md transition-shadow"
-                >
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="space-y-4">
-                      {/* Header */}
-                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className={`p-2 rounded-lg ${scoreColor.bg} shrink-0`}>
-                            <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${scoreColor.text}`} />
-                          </div>
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-sm sm:text-base text-slate-900">{result.criterionName}</h3>
-                          </div>
-                        </div>
-                        <Badge className={`${scoreColor.bg} ${scoreColor.text} border-0 text-xs sm:text-sm font-semibold px-2 sm:px-3 py-0.5 sm:py-1 self-start ml-9 sm:ml-0`}>
-                          {(result.score * 100).toFixed(0)}%
-                        </Badge>
-                      </div>
+      <Card className="border-amber-200 bg-amber-50/20">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2 text-amber-900">
+            <AlertTriangle className="w-4 h-4" />
+            Key Risks
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2 text-sm text-slate-700">
+            {analysis.keyRisks.points.map((point, i) => (
+              <li key={i} className="flex gap-2">
+                <span className="text-amber-600 shrink-0">•</span>
+                <span>{point}</span>
+              </li>
+            ))}
+          </ul>
+        </CardContent>
+      </Card>
 
-                      {/* Progress bar */}
-                      <div className="space-y-2">
-                        <Progress 
-                          value={result.score * 100} 
-                          className="h-1.5 sm:h-2"
-                        />
-                      </div>
-
-                      {/* Findings */}
-                      <div className="pt-2 border-t border-slate-100">
-                        <p className="text-xs sm:text-sm leading-relaxed text-slate-700 whitespace-pre-wrap">
-                          {result.findings}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
+      {analysis.sourcesUsed && analysis.sourcesUsed.length > 0 && (
+        <SourcesUsedSection sources={analysis.sourcesUsed} />
       )}
     </div>
+  );
+}
+
+function SourcesUsedSection({ sources }: { sources: SourceDocument[] }) {
+  return (
+    <Card className="border-slate-200 bg-slate-50/30">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base flex items-center gap-2">
+          <FileText className="w-4 h-4 text-blue-600" />
+          Sources used in this analysis
+        </CardTitle>
+        <p className="text-xs text-slate-500 font-normal">
+          Pages retrieved from your uploads during metric and qualitative search.
+        </p>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {sources.map((src) => (
+          <div
+            key={src.fileId}
+            className="rounded-lg border border-slate-200 bg-white p-3 text-sm"
+          >
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <span className="font-medium text-slate-900">{src.fileName}</span>
+              <span className="text-xs text-slate-500">
+                ({src.usedInSections.join(", ")})
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {src.pages.map((page) => (
+                <a
+                  key={page}
+                  href={`/api/documents/${src.fileId}/view?page=${page}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Badge
+                    variant="outline"
+                    className="text-xs cursor-pointer hover:bg-blue-50 hover:border-blue-300"
+                  >
+                    p.{page}
+                    <ExternalLink className="w-2.5 h-2.5 ml-1 opacity-60" />
+                  </Badge>
+                </a>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }

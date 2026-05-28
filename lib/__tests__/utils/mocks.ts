@@ -31,46 +31,6 @@ export function createMockAnalysisService() {
 }
 
 /**
- * Mock DocumentRepository for testing
- */
-export function createMockDocumentRepository() {
-  return {
-    create: vi.fn(),
-    findById: vi.fn(),
-    findByUserId: vi.fn(),
-    findByIdAndUserId: vi.fn(),
-    update: vi.fn(),
-    delete: vi.fn(),
-    exists: vi.fn(),
-    countByUserId: vi.fn(),
-    updateStatus: vi.fn(),
-    updateMetadata: vi.fn(),
-  };
-}
-
-/**
- * Mock UserService for testing
- */
-export function createMockUserService() {
-  return {
-    ensureUser: vi.fn(),
-    syncUserFromWebhook: vi.fn(),
-    getUserById: vi.fn(),
-    userExists: vi.fn(),
-    deleteUser: vi.fn(),
-  };
-}
-
-/**
- * Mock DocumentProcessorService for testing
- */
-export function createMockDocumentProcessor() {
-  return {
-    processDocument: vi.fn(),
-  };
-}
-
-/**
  * Mock fetch responses
  */
 export function createMockFetchResponse<T>(data: T, ok: boolean = true) {

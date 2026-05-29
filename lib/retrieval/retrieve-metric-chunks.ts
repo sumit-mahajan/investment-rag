@@ -17,17 +17,12 @@ export async function retrieveMetricChunks(
   topKPerQuery = 8
 ): Promise<RetrievedChunk[]> {
   const queries = [spec.query, ...(spec.supplementalQueries ?? [])];
-  const all: RetrievedChunk[] = [];
 
-  for (const query of queries) {
-    const chunks = await retrieveChunks({
-      userId,
-      fileIds,
-      query,
-      topK: topKPerQuery,
-    });
-    all.push(...chunks);
-  }
+  // Run all supplemental queries in parallel — each is an independent Pinecone lookup.
+  const results = await Promise.all(
+    queries.map((query) => retrieveChunks({ userId, fileIds, query, topK: topKPerQuery }))
+  );
+  const all = results.flat();
 
   const deduped = dedupeChunks(all);
 

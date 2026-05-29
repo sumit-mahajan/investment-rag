@@ -10,6 +10,13 @@ export interface RetrieveChunksOptions {
   topK?: number;
 }
 
+/** Singleton embedder — reused across all retrieve calls in a request lifecycle. */
+let sharedEmbedder: Embedder | null = null;
+function getEmbedder(): Embedder {
+  if (!sharedEmbedder) sharedEmbedder = new Embedder(getEmbeddingConfig());
+  return sharedEmbedder;
+}
+
 function toRetrievedChunk(match: {
   id: string;
   score: number;
@@ -48,8 +55,7 @@ export async function retrieveChunks(
 
   if (fileIds.length === 0 || !query.trim()) return [];
 
-  const embedder = new Embedder(getEmbeddingConfig());
-  const vector = await embedder.embedSingle(query);
+  const vector = await getEmbedder().embedSingle(query);
 
   const filter =
     fileIds.length === 1

@@ -65,6 +65,13 @@ export const metadata: Metadata = {
     title: siteName,
     statusBarStyle: "black-translucent",
   },
+  icons: {
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-icon.png", type: "image/png", sizes: "180x180" }],
+  },
 };
 
 export const dynamic = "force-dynamic";
@@ -83,6 +90,11 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
+        <head>
+          <link rel="icon" href="/favicon.ico" sizes="any" />
+          <link rel="icon" href="/icon.png" type="image/png" sizes="32x32" />
+          <link rel="apple-touch-icon" href="/apple-icon.png" sizes="180x180" />
+        </head>
         <body className={inter.className}>
           <script
             type="application/ld+json"

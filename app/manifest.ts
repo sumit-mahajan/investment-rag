@@ -14,13 +14,13 @@ export default function manifest(): MetadataRoute.Manifest {
     categories: ["finance", "productivity", "business"],
     icons: [
       {
-        src: "/icon",
+        src: "/icon.png",
         type: "image/png",
         sizes: "32x32",
         purpose: "any",
       },
       {
-        src: "/apple-icon",
+        src: "/apple-icon.png",
         type: "image/png",
         sizes: "180x180",
         purpose: "any",

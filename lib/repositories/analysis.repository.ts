@@ -5,6 +5,7 @@ import { BaseRepository, type Transaction } from "./base.repository";
 import type { CreateAnalysisDTO, AnalysisFiltersDTO } from "@/lib/types/dtos";
 import type { Analysis } from "@/lib/types/domain-models";
 import { NotFoundError } from "@/lib/errors/domain-errors";
+import { deriveAnalysisStatus } from "@/lib/utils/analysis-status";
 
 @injectable()
 export class AnalysisRepository extends BaseRepository {
@@ -80,6 +81,7 @@ export class AnalysisRepository extends BaseRepository {
           traceUrl: analyses.traceUrl,
           createdAt: analyses.createdAt,
           hasResult: sql<boolean>`${analyses.result} is not null`,
+          hasError: sql<boolean>`(${analyses.result}->>'error') is not null`,
         })
         .from(analyses)
         .where(eq(analyses.userId, userId))
@@ -142,8 +144,10 @@ export class AnalysisRepository extends BaseRepository {
     traceUrl: string | null;
     createdAt: Date;
     hasResult: boolean;
+    hasError: boolean;
   }): Analysis {
     const docs = (row.documents ?? []) as AnalysisDocumentRef[];
+    const status = !row.hasResult ? "running" : row.hasError ? "failed" : "completed";
     return {
       id: row.id,
       userId: row.userId,
@@ -151,7 +155,7 @@ export class AnalysisRepository extends BaseRepository {
       result: null,
       traceUrl: row.traceUrl,
       createdAt: row.createdAt,
-      status: row.hasResult ? "completed" : "running",
+      status,
       fileIds: docs.map((d) => d.fileId),
       documentCount: docs.length,
       label:
@@ -170,7 +174,7 @@ export class AnalysisRepository extends BaseRepository {
       result: row.result,
       traceUrl: row.traceUrl,
       createdAt: row.createdAt,
-      status: row.result ? "completed" : "running",
+      status: deriveAnalysisStatus(row.result),
       fileIds: docs.map((d) => d.fileId),
       documentCount: docs.length,
       label:

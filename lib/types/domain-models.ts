@@ -3,6 +3,7 @@
  */
 
 import type { AnalysisDocumentRef, ConversationMessage } from "@/lib/db/schema";
+import type { AnalysisStatus } from "@/lib/types/analysis";
 
 export interface Analysis {
   id: string;
@@ -11,8 +12,8 @@ export interface Analysis {
   result: unknown | null;
   traceUrl: string | null;
   createdAt: Date;
-  /** Derived: running when result is null */
-  status: "running" | "completed";
+  /** Derived from result payload — failed when result is `{ error: string }` */
+  status: AnalysisStatus;
   fileIds: string[];
   documentCount: number;
   label: string;

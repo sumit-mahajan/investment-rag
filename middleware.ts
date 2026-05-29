@@ -6,6 +6,12 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/webhooks(.*)",
   "/api/documents/upload(.*)",
+  // Metadata routes have no file extension, so they must be public explicitly.
+  "/icon(.*)",
+  "/apple-icon(.*)",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
+  "/favicon.ico",
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

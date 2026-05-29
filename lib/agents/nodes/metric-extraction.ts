@@ -1,7 +1,7 @@
 import { z } from "zod";
 import type { AnalysisState } from "../financial-analyzer";
 import { METRIC_DEFINITIONS } from "../metrics";
-import { getGroqModel } from "../groq";
+import { getGroqExtractionModel } from "../groq";
 import { retrieveMetricChunks } from "@/lib/retrieval/retrieve-metric-chunks";
 import type { ExtractedMetric } from "@/lib/types/analysis";
 import {
@@ -42,11 +42,13 @@ function formatChunksForPrompt(
   chunks: { fileName: string; pageNumber: number; chunkType: string; content: string }[]
 ) {
   if (chunks.length === 0) return "No passages retrieved.";
+  // Capped at 6 chunks × 900 chars to stay within 8B model context efficiently.
+  // Table chunks are already sorted first by retrieveMetricChunks.
   return chunks
-    .slice(0, 10)
+    .slice(0, 6)
     .map(
       (c, i) =>
-        `[${i + 1}] ${c.fileName} p.${c.pageNumber} (${c.chunkType})\n${c.content.slice(0, 1400)}`
+        `[${i + 1}] ${c.fileName} p.${c.pageNumber} (${c.chunkType})\n${c.content.slice(0, 900)}`
     )
     .join("\n\n");
 }
@@ -96,55 +98,57 @@ function parseExtraction(raw: z.infer<typeof metricExtractionSchema>): MetricExt
   };
 }
 
-export async function metricExtractionNode(
-  state: AnalysisState
-): Promise<Partial<AnalysisState>> {
-  const { fileIds, userId } = state;
-  const model = getGroqModel().withStructuredOutput(metricExtractionSchema);
-  const extractedMetrics: ExtractedMetric[] = [];
+type ExtractionModel = Awaited<ReturnType<ReturnType<typeof getGroqExtractionModel>["withStructuredOutput"]>>;
 
-  for (const metric of METRIC_DEFINITIONS) {
-    const chunks = await retrieveMetricChunks(userId, fileIds, {
-      query: metric.query,
-      supplementalQueries: metric.supplementalQueries
-        ? [...metric.supplementalQueries]
-        : undefined,
-    });
+async function extractSingleMetric(
+  metric: (typeof METRIC_DEFINITIONS)[number],
+  userId: string,
+  fileIds: string[],
+  model: ExtractionModel
+): Promise<ExtractedMetric> {
+  const chunks = await retrieveMetricChunks(userId, fileIds, {
+    query: metric.query,
+    supplementalQueries: metric.supplementalQueries ? [...metric.supplementalQueries] : undefined,
+  });
 
-    if (chunks.length === 0) {
-      extractedMetrics.push({ label: metric.label, value: null, chunks: [] });
-      continue;
-    }
+  if (chunks.length === 0) return { label: metric.label, value: null, chunks: [] };
 
-    const context = chunkContext(chunks);
-    const prompt = `${EXTRACTION_RULES}
+  const context = chunkContext(chunks);
+  const prompt = `${EXTRACTION_RULES}
 
 Extract: "${metric.label}"
 
 ${formatChunksForPrompt(chunks)}`;
 
-    try {
-      const result = await model.invoke(prompt);
-      const fields = parseExtraction(result);
-      const display = buildMetricDisplayLine(fields);
-      const validated = display
-        ? validateMetricAgainstContext(display, context, metric.label)
-        : null;
-
-      extractedMetrics.push({
-        label: metric.label,
-        value: validated,
-        chunks,
-      });
-    } catch (error) {
-      if (isGroqRateLimitError(error)) {
-        console.error(`Groq rate limit during metric extraction (${metric.label})`);
-        throw new Error(groqRateLimitMessage(error));
-      }
-      console.error(`Metric extraction failed for ${metric.label}:`, error);
-      extractedMetrics.push({ label: metric.label, value: null, chunks });
+  try {
+    const result = await model.invoke(prompt) as z.infer<typeof metricExtractionSchema>;
+    const fields = parseExtraction(result);
+    const display = buildMetricDisplayLine(fields);
+    const validated = display
+      ? validateMetricAgainstContext(display, context, metric.label)
+      : null;
+    return { label: metric.label, value: validated, chunks };
+  } catch (error) {
+    if (isGroqRateLimitError(error)) {
+      console.error(`Groq rate limit during metric extraction (${metric.label})`);
+      throw new Error(groqRateLimitMessage(error));
     }
+    console.error(`Metric extraction failed for ${metric.label}:`, error);
+    return { label: metric.label, value: null, chunks };
   }
+}
+
+export async function metricExtractionNode(
+  state: AnalysisState
+): Promise<Partial<AnalysisState>> {
+  const { fileIds, userId } = state;
+  const model = getGroqExtractionModel().withStructuredOutput(metricExtractionSchema) as ExtractionModel;
+
+  // All 6 metrics run in parallel — each retrieves + extracts independently.
+  // A rate-limit error in any metric propagates to fail-fast the whole node.
+  const extractedMetrics = await Promise.all(
+    METRIC_DEFINITIONS.map((metric) => extractSingleMetric(metric, userId, fileIds, model))
+  );
 
   return { extractedMetrics };
 }

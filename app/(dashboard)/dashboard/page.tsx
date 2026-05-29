@@ -103,10 +103,16 @@ export default async function DashboardPage() {
                           className={`text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full shrink-0 ${
                             analysis.status === "completed"
                               ? "bg-emerald-100 text-emerald-700"
-                              : "bg-amber-100 text-amber-700"
+                              : analysis.status === "failed"
+                                ? "bg-rose-100 text-rose-700"
+                                : "bg-amber-100 text-amber-700"
                           }`}
                         >
-                          {analysis.status}
+                          {analysis.status === "completed"
+                            ? "Completed"
+                            : analysis.status === "failed"
+                              ? "Failed"
+                              : "Running"}
                         </span>
                       </div>
                     </CardContent>

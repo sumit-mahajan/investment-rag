@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { ArrowLeft, FileText, Loader2, Play } from "lucide-react";
 import { formatDateTime } from "@/lib/utils";
+import { getAnalysisErrorMessage } from "@/lib/utils/analysis-status";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -41,12 +42,7 @@ export default async function AnalysisDetailPage({
     ? `/analysis/multi?${analysisDocsList.map((d) => `docs=${d.fileId}`).join("&")}`
     : `/analysis/${primaryDoc?.fileId ?? ""}`;
 
-  const resultError =
-    analysis.result &&
-    typeof analysis.result === "object" &&
-    "error" in (analysis.result as object)
-      ? String((analysis.result as { error: string }).error)
-      : null;
+  const resultError = getAnalysisErrorMessage(analysis.result);
 
   if (analysis.status === "running") {
     return (
@@ -81,7 +77,7 @@ export default async function AnalysisDetailPage({
     );
   }
 
-  if (resultError) {
+  if (analysis.status === "failed" && resultError) {
     return (
       <div className="max-w-4xl mx-auto space-y-6 sm:space-y-8 px-1">
         <div className="flex items-center gap-3 sm:gap-4">

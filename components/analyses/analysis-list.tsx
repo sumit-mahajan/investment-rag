@@ -54,6 +54,10 @@ export function AnalysisList({ analyses }: { analyses: Analysis[] }) {
                       <Clock className="w-3 h-3 mr-1 animate-spin" />
                       Running
                     </Badge>
+                  ) : analysis.status === "failed" ? (
+                    <Badge className="bg-rose-100 text-rose-700 border-0 text-xs">
+                      Failed
+                    </Badge>
                   ) : (
                     <Badge className="bg-emerald-100 text-emerald-700 border-0 text-xs">
                       Completed

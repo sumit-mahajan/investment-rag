@@ -222,9 +222,9 @@ export default function HomePage() {
             {outputFeatures.map(({ icon: Icon, name, description }, i) => (
               <div
                 key={name}
-                className={`group flex gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-md transition-all duration-300 opacity-0 animate-fade-in-up ${["animation-delay-300", "animation-delay-400", "animation-delay-500", "animation-delay-600", "animation-delay-700", "animation-delay-800"][i]}`}
+                className={`group flex items-start gap-3 sm:gap-4 p-4 sm:p-6 rounded-2xl bg-white border border-slate-200/80 hover:border-blue-200 hover:shadow-md transition-all duration-300 opacity-0 animate-fade-in-up ${["animation-delay-300", "animation-delay-400", "animation-delay-500", "animation-delay-600", "animation-delay-700", "animation-delay-800"][i]}`}
               >
-                <div className="shrink-0 p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
+                <div className="shrink-0 w-fit h-fit p-2 sm:p-2.5 rounded-xl bg-blue-50 text-blue-600 group-hover:bg-blue-100 transition-colors">
                   <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div>

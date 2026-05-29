@@ -147,7 +147,11 @@ export class AnalysisRepository extends BaseRepository {
     hasError: boolean;
   }): Analysis {
     const docs = (row.documents ?? []) as AnalysisDocumentRef[];
-    const status = !row.hasResult ? "running" : row.hasError ? "failed" : "completed";
+    const status = row.hasResult
+      ? row.hasError
+        ? "failed"
+        : "completed"
+      : deriveAnalysisStatus(null, row.createdAt);
     return {
       id: row.id,
       userId: row.userId,
@@ -174,7 +178,7 @@ export class AnalysisRepository extends BaseRepository {
       result: row.result,
       traceUrl: row.traceUrl,
       createdAt: row.createdAt,
-      status: deriveAnalysisStatus(row.result),
+      status: deriveAnalysisStatus(row.result, row.createdAt),
       fileIds: docs.map((d) => d.fileId),
       documentCount: docs.length,
       label:

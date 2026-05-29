@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse, after } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
 import { AnalysisService } from "@/lib/services/analysis.service";
@@ -6,7 +7,8 @@ import { handleError } from "@/lib/utils/errors";
 import { AnalysisRequestSchema } from "@/lib/utils/validation";
 
 export const runtime = "nodejs";
-export const maxDuration = 60;
+/** LangGraph + Groq pipeline often exceeds 60s on Vercel */
+export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {
   const analysisService = container.resolve(AnalysisService);
@@ -37,6 +39,13 @@ export async function POST(req: NextRequest) {
         );
       } catch (error) {
         console.error("Analysis execution failed:", error);
+      } finally {
+        try {
+          revalidatePath("/analyses");
+          revalidatePath(`/analyses/${analysis.id}`);
+        } catch {
+          // revalidatePath requires an active Next.js request context
+        }
       }
     });
 

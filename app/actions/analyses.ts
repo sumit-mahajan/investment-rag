@@ -44,12 +44,8 @@ export async function startAnalysisAction(
       }
     };
 
-    // In dev, await so the pipeline isn't dropped when the server action returns
-    if (process.env.NODE_ENV === "development") {
-      await runPipeline();
-    } else {
-      after(runPipeline);
-    }
+    // Route handler + after() is reliable on Vercel; server actions can drop background work.
+    after(runPipeline);
 
     revalidatePath("/analyses");
     revalidatePath(`/analyses/${analysis.id}`);

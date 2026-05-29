@@ -42,7 +42,7 @@ export default async function AnalysisDetailPage({
     ? `/analysis/multi?${analysisDocsList.map((d) => `docs=${d.fileId}`).join("&")}`
     : `/analysis/${primaryDoc?.fileId ?? ""}`;
 
-  const resultError = getAnalysisErrorMessage(analysis.result);
+  const resultError = getAnalysisErrorMessage(analysis.result, analysis.createdAt);
 
   if (analysis.status === "running") {
     return (

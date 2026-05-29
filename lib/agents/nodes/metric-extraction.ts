@@ -98,13 +98,19 @@ function parseExtraction(raw: z.infer<typeof metricExtractionSchema>): MetricExt
   };
 }
 
-type ExtractionModel = Awaited<ReturnType<ReturnType<typeof getGroqExtractionModel>["withStructuredOutput"]>>;
+function parseStructuredOutput<T>(schema: z.ZodType<T>, value: unknown): T {
+  const payload =
+    typeof value === "object" && value !== null && "parsed" in value
+      ? (value as { parsed: unknown }).parsed
+      : value;
+  return schema.parse(payload);
+}
 
 async function extractSingleMetric(
   metric: (typeof METRIC_DEFINITIONS)[number],
   userId: string,
   fileIds: string[],
-  model: ExtractionModel
+  model: { invoke: (prompt: string) => Promise<unknown> }
 ): Promise<ExtractedMetric> {
   const chunks = await retrieveMetricChunks(userId, fileIds, {
     query: metric.query,
@@ -121,8 +127,8 @@ Extract: "${metric.label}"
 ${formatChunksForPrompt(chunks)}`;
 
   try {
-    const result = await model.invoke(prompt) as z.infer<typeof metricExtractionSchema>;
-    const fields = parseExtraction(result);
+    const result = await model.invoke(prompt);
+    const fields = parseExtraction(parseStructuredOutput(metricExtractionSchema, result));
     const display = buildMetricDisplayLine(fields);
     const validated = display
       ? validateMetricAgainstContext(display, context, metric.label)
@@ -142,7 +148,7 @@ export async function metricExtractionNode(
   state: AnalysisState
 ): Promise<Partial<AnalysisState>> {
   const { fileIds, userId } = state;
-  const model = getGroqExtractionModel().withStructuredOutput(metricExtractionSchema) as ExtractionModel;
+  const model = getGroqExtractionModel().withStructuredOutput(metricExtractionSchema);
 
   // All 6 metrics run in parallel — each retrieves + extracts independently.
   // A rate-limit error in any metric propagates to fail-fast the whole node.

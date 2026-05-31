@@ -10,8 +10,7 @@ An AI-powered app that ingests financial PDFs (10-K, annual reports, etc.) and p
 
 You'll need accounts and API keys for:
 
-- **Groq** - [Get free API key](https://console.groq.com) (for LLM)
-- **Google AI** - [Get free API key](https://aistudio.google.com/apikey) (for embeddings)
+- **Google AI** - [Get free API key](https://aistudio.google.com/apikey) (for embeddings + LLM)
 - **Pinecone** - [Sign up free](https://pinecone.io)
 - **Clerk** - [Sign up free](https://clerk.com)
 - **PostgreSQL** - Use [Vercel Postgres](https://vercel.com/storage/postgres) or [Neon](https://neon.tech)
@@ -34,7 +33,6 @@ Open `.env.local` and fill in your keys:
 
 ```env
 # Required
-GROQ_API_KEY=...
 GOOGLE_API_KEY=...
 PINECONE_API_KEY=...
 PINECONE_INDEX_NAME=investment-rag
@@ -167,7 +165,7 @@ User runs analysis ← 4-node LangGraph (metrics → qualitative RAG → synthes
 metricExtraction → qualitativeRetrieval → synthesis → citationAssembly
 ```
 
-Dense retrieval scoped by `fileId`. Groq Llama 3.3 70B produces verdict, bull/bear, metrics, and risks with page citations.
+Dense retrieval scoped by `fileId`. Gemini Flash produces verdict, bull/bear, metrics, and risks with page citations.
 
 ### Project structure
 
@@ -188,7 +186,7 @@ components/          # React UI
 | Component                             | Cost         |
 | ------------------------------------- | ------------ |
 | Embeddings (Gemini, one-time per doc) | **FREE** ✨  |
-| Analysis (Groq Llama 3.3 70B)         | **FREE** ✨  |
+| Analysis (Gemini Flash)               | **FREE** ✨  |
 | **Total**                             | **$0.00** 🎉 |
 
 _100% free within generous tier limits (1000s of requests/day)_
@@ -213,7 +211,7 @@ _100% free within generous tier limits (1000s of requests/day)_
 - **Auth**: Clerk
 - **Database**: PostgreSQL (Drizzle ORM)
 - **Vector DB**: Pinecone
-- **AI**: LangChain, LangGraph, LlamaParse, Groq (Llama 3.3 70B), Google Gemini (embeddings), LangSmith (optional)
+- **AI**: LangChain, LangGraph, LlamaParse, Google Gemini (embeddings + Flash LLM), LangSmith (optional)
 - **Deployment**: Vercel
 
 ---

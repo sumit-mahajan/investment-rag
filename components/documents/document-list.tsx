@@ -66,6 +66,7 @@ export function DocumentList({ documents }: { documents: DocumentListItem[] }) {
 
       if (result.success) {
         toast.success(result.data.message);
+        router.refresh();
         setSelectedIds((prev) => {
           const next = new Set(prev);
           next.delete(id);

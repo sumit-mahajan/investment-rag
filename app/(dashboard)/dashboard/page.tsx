@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { DocumentUploader } from "@/components/documents/document-uploader";
 import { DocumentList } from "@/components/documents/document-list";
+import { DocumentIngestPoller } from "@/components/documents/document-ingest-poller";
 import type { DocumentListItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,10 @@ export default async function DashboardPage() {
     totalChunks: f.chunkCount ?? 0,
   }));
 
+  const hasProcessingDocuments = documentListItems.some(
+    (d) => d.status === "processing"
+  );
+
   return (
     <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
       <div>
@@ -53,6 +58,7 @@ export default async function DashboardPage() {
           </div>
 
           <DocumentUploader />
+          {hasProcessingDocuments && <DocumentIngestPoller />}
 
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-xs sm:text-sm font-medium text-slate-700 uppercase tracking-wide">

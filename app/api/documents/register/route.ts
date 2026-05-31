@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
+import { revalidatePath } from "next/cache";
 import { auth } from "@clerk/nextjs/server";
 import { container } from "@/lib/di";
 import { DocumentService } from "@/lib/services/document.service";
@@ -27,20 +28,23 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const fileResponse = await fetch(blobUrl);
-    if (!fileResponse.ok) {
-      return NextResponse.json(
-        { error: "Failed to fetch uploaded file" },
-        { status: 400 }
-      );
-    }
-
-    const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
-
-    const file = await documentService.registerFile(userId, {
+    const file = await documentService.startIngestion(userId, {
       blobUrl,
       filename,
-      fileBuffer,
+    });
+
+    after(async () => {
+      try {
+        await documentService.executeIngestion(file.fileId, userId);
+      } catch (error) {
+        console.error("Document ingestion failed:", error);
+      } finally {
+        try {
+          revalidatePath("/dashboard");
+        } catch {
+          // revalidatePath requires an active Next.js request context
+        }
+      }
     });
 
     return NextResponse.json({
@@ -48,8 +52,8 @@ export async function POST(req: NextRequest) {
       fileName: file.fileName,
       blobUrl: file.blobUrl,
       status: file.status,
-      chunkCount: file.chunkCount,
-      message: "Document indexed and ready for analysis.",
+      chunkCount: 0,
+      message: "Document queued for indexing. It will appear when processing completes.",
     });
   } catch (error) {
     console.error("Register error:", error);

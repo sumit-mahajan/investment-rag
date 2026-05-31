@@ -9,7 +9,7 @@
 | PDF parsing | LlamaParse (`LLAMA_CLOUD_API_KEY`) |
 | Embeddings | Gemini `gemini-embedding-001`, 768d, free tier |
 | Vector store | Pinecone — dense index only, cosine metric, one namespace per user |
-| LLM | Groq `llama-3.3-70b-versatile` via `@langchain/groq` |
+| LLM | Gemini `gemini-2.5-flash` via `@langchain/google-genai` |
 | Orchestration | LangGraph `@langchain/langgraph` ^0.2 |
 | File storage | Vercel Blob (PDFs only) |
 | Database | Vercel Postgres / Drizzle — **two tables only**: `analyses`, `conversations` |

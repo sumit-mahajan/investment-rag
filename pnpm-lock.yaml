@@ -20,9 +20,6 @@ importers:
       '@langchain/google-genai':
         specifier: ^2.1.20
         version: 2.1.31(@langchain/core@1.1.48(@opentelemetry/api@1.9.1)(openai@6.39.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0))
-      '@langchain/groq':
-        specifier: ^1.1.2
-        version: 1.2.1(@langchain/core@1.1.48(@opentelemetry/api@1.9.1)(openai@6.39.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0))
       '@langchain/langgraph':
         specifier: ^0.2.0
         version: 0.2.74(@langchain/core@1.1.48(@opentelemetry/api@1.9.1)(openai@6.39.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0))(react-dom@19.2.6(react@19.2.6))(react@19.2.6)(zod-to-json-schema@3.25.2(zod@3.25.76))
@@ -6294,6 +6291,7 @@ snapshots:
     dependencies:
       '@langchain/core': 1.1.48(@opentelemetry/api@1.9.1)(openai@6.39.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0)
       groq-sdk: 1.2.1
+    optional: true
 
   '@langchain/langgraph-checkpoint@0.0.18(@langchain/core@1.1.48(@opentelemetry/api@1.9.1)(openai@6.39.0(ws@8.21.0)(zod@3.25.76))(ws@8.21.0))':
     dependencies:
@@ -8378,7 +8376,8 @@ snapshots:
 
   gopd@1.2.0: {}
 
-  groq-sdk@1.2.1: {}
+  groq-sdk@1.2.1:
+    optional: true
 
   handlebars@4.7.9:
     dependencies:

@@ -5,55 +5,131 @@ alwaysApply: true
 
 # Project architecture
 
-Stack: Next.js 15 App Router, TypeScript, Clerk, Vercel Blob, Pinecone (dense only), LangGraph ^0.2, LlamaParse, Groq (`llama-3.3-70b-versatile`), Gemini embeddings (768d), Vercel Postgres (`documents`, `analyses`, `conversations`), LangSmith, tsyringe DI.
+Stack: Next.js 15 App Router, TypeScript, Clerk, Vercel Blob, Pinecone (dense only), LangGraph ^0.2, LlamaParse, Gemini (`gemini-2.5-flash` LLM + `gemini-embedding-001` 768d), Vercel Postgres (`documents`, `analyses`, `conversations`), LangSmith, tsyringe DI.
 
 **No:** hybrid search, keyword search, Cohere, reranking, Postgres chunk registry, pdf-parse.
+
+## App routes (pages)
+
+| Route | Role |
+|-------|------|
+| `/` | Public landing |
+| `/sign-in`, `/sign-up` | Clerk auth |
+| `/dashboard` | Upload PDFs, document list, recent analyses (`force-dynamic` — per-user data) |
+| `/analyses` | List saved analyses (RSC → `AnalysisService`) |
+| `/analyses/[id]` | View results, sources, follow-up chat; polls while `running` |
+| `/analysis/[id]` | Run pipeline for **one** document (`AnalysisForm` → `POST /api/analyze`) |
+| `/analysis/multi` | Run pipeline for **multiple** docs (`?docs=fileId&docs=…`) |
+
+**Naming:** `/analysis/*` = **start** a run; `/analyses/*` = **read** a saved run.
+
+## HTTP API (used by client or webhooks only)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| POST | `/api/documents/upload` | Vercel Blob client upload (public in middleware) |
+| POST | `/api/documents/register` | Ingest after blob upload (`maxDuration` 300) |
+| GET | `/api/documents/[id]/view` | PDF page view for citations |
+| POST | `/api/analyze` | Start analysis; LangGraph runs in `after()` (`maxDuration` 300) |
+| GET/POST | `/api/analyses/[id]/chat` | Load/append follow-up messages |
+| POST | `/api/webhooks/clerk` | Clerk lifecycle |
+
+List/detail pages **do not** call REST for analyses or documents — they use services in Server Components. Removed unused: `GET /api/documents`, `GET/DELETE /api/documents/[id]`, `GET /api/analyses`, `GET /api/analyses/[id]`.
+
+## Server actions
+
+| Action | Use |
+|--------|-----|
+| `deleteDocumentAction` | Document delete from dashboard UI + `revalidatePath` |
+
+Register and start-analysis use API routes (not actions) so `after()` background work is reliable on Vercel.
+
+## Server action vs API route
+
+- **Server action:** `"use server"` function called from client or server; good for mutations + `revalidatePath` in the same request. Background work after the response can be dropped on serverless.
+- **API route:** Normal HTTP; required for Vercel Blob `handleUploadUrl`, webhooks, and **long work scheduled with `after()`** from the route handler.
+
+## Long-running analysis (30–90s+)
+
+```
+POST /api/analyze
+  → startAnalysis() → INSERT analyses (documents snapshot, result=null)
+  → return { analysisId } immediately
+  → after(() => executeAnalysis()) → LangGraph → UPDATE analyses.result + traceUrl
+  → revalidatePath /analyses and /analyses/[id]
+```
+
+Client navigates to `/analyses/[id]`; `AnalysisStatusPoller` calls `router.refresh()` until `result` is set. Status is **derived** (`running` if `result` is null and not stale; `failed` if `{ error }` or stale > 4 min).
+
+Ingestion (`POST /api/documents/register`) matches analyze: `startIngestion()` → row `status: processing` → return `fileId` → `after(executeIngestion())` fetches blob, runs LlamaParse/chunk/embed/Pinecone, updates row to `completed` or `failed`. Dashboard uses `DocumentIngestPoller` + `router.refresh()` while any doc is `processing`.
 
 ## Core types
 
 ```typescript
-// lib/types/core.ts
+// lib/types/core.ts — Pinecone chunk metadata
 interface ChunkMetadata {
   fileId: string; fileName: string; blobUrl: string;
   pageNumber: number; content: string; chunkType: "prose"|"table"; userId: string;
 }
-interface Citation     { documentName: string; pageNumber: number }
-interface Metric       { label: string; value: string|null; citation: Citation|null }
+
+// lib/types/analysis.ts — LangGraph output (stored in analyses.result jsonb)
 interface InvestmentAnalysis {
-  bullCase:   { points: string[];   citations: Citation[] }
-  bearCase:   { points: string[];   citations: Citation[] }
-  keyMetrics: Metric[]
-  keyRisks:   { points: string[];   citations: Citation[] }
+  verdict: { score: number; recommendation: string; headline: string; summary: string };
+  bullCase:   { points: string[]; citations: Citation[] };
+  bearCase:   { points: string[]; citations: Citation[] };
+  keyMetrics: Metric[];
+  keyRisks:   { points: string[]; citations: Citation[] };
+  sourcesUsed?: SourceDocument[];
 }
 ```
 
 ## Ingestion pipeline
 
 ```
-Client uploads PDF → Vercel Blob (client-side) → POST /api/documents/register
-  → generate fileId (uuid), store blobUrl + fileName in response
-  → ingestDocument(fileId, userId, fileName, blobUrl, fileBuffer) [fire-and-forget]
+Client uploads PDF → Vercel Blob (client-side) → POST /api/documents/upload
+  → POST /api/documents/register { blobUrl, filename } → processing row → after(executeIngestion)
+  → ingestDocument(fileId, userId, fileName, blobUrl, fileBuffer) [background]
     → LlamaParse.parse(buffer) → pages with prose + markdown tables, each with pageNumber
-    → chunkPages(pages) → Chunk[] — prose and table chunks, each with pageNumber
+    → chunkPages(pages) → Chunk[]
     → embedChunks(chunks) → number[][] (gemini-embedding-001, 768d, batch 50)
     → upsertChunks(chunks, embeddings, userId) → Pinecone namespace=userId
       metadata per vector: { fileId, fileName, blobUrl, pageNumber, content, chunkType, userId }
 ```
 
-After ingest, `DocumentService` inserts a row into Postgres `documents`. Chunks/vectors stay in Pinecone only.
+After ingest, `DocumentService` inserts/updates Postgres `documents`. Chunks/vectors stay in Pinecone only.
 
 ## Analysis pipeline (4-node LangGraph)
 
 ```
 POST /api/analyze { fileIds: string[], question: string }
-  → runAnalysis(fileIds, userId, question) → LangGraph:
-    Node 1 (metricExtraction) → retrieve metric-specific chunks → ExtractedMetrics in state
-    Node 2 (qualitativeRetrieval) → retrieve risk/catalyst chunks → RetrievedPassages in state
-    Node 3 (synthesis) → Groq structured output → InvestmentAnalysis (no retrieval)
-    Node 4 (citationAssembly) → attach citations from chunk metadata → final InvestmentAnalysis
-  → insert analyses row { userId, documents[], result, traceUrl, createdAt }
-  → return { analysis: InvestmentAnalysis, traceUrl: string }
+  → executeAnalysis (background) → LangGraph:
+    Node 1 (metricExtraction) → retrieve metric-specific chunks
+    Node 2 (qualitativeRetrieval) → retrieve risk/catalyst chunks
+    Node 3 (synthesis) → Gemini Flash structured output → InvestmentAnalysis
+    Node 4 (citationAssembly) → attach citations from chunk metadata
+  → UPDATE analyses { result, traceUrl }
 ```
+
+## Postgres schema (Drizzle)
+
+```
+documents (registry):
+  fileId uuid PK, userId text, fileName text, blobUrl text,
+  status text, chunkCount int, createdAt timestamp
+
+analyses:
+  id uuid PK, userId text,
+  documents jsonb  → AnalysisDocumentRef[]  { fileId, fileName, blobUrl }  // snapshot at run start
+  result jsonb     → InvestmentAnalysis | { error: string } | null       // null = still running
+  traceUrl text, createdAt timestamp
+
+conversations (1:1 with analysis for follow-up chat):
+  id uuid PK, userId text, analysisId uuid FK→analyses ON DELETE CASCADE,
+  messages jsonb → ConversationMessage[]  { role: "user"|"assistant", content, createdAt },
+  updatedAt timestamp
+```
+
+`documents` on an analysis row is a **point-in-time snapshot** (citations, labels, PDF links) if registry rows change later. `messages` is a **JSON array per conversation row** (simple chat history; no separate messages table).
 
 ## Folder ownership
 
@@ -61,27 +137,20 @@ POST /api/analyze { fileIds: string[], question: string }
 |------|------|
 | `app/api/` | HTTP boundary — parse, call service, return response |
 | `app/actions/` | Server actions — auth, call service, revalidatePath |
-| `lib/types/` | All shared interfaces (core.ts is the source of truth) |
-| `lib/ingestion/` | parse → chunk → embed → upsert (one function per step) |
-| `lib/retrieval/` | Pinecone vector query only — `retrieveChunks(userId, fileIds, query, topK)` |
+| `lib/types/` | Shared interfaces (`core.ts`, `analysis.ts`, `domain-models.ts`) |
+| `lib/ingestion/` | parse → chunk → embed → upsert |
+| `lib/retrieval/` | Pinecone vector query — `retrieveChunks(userId, fileIds, query, topK)` |
 | `lib/agents/` | LangGraph graph + 4 nodes |
 | `lib/services/` | Orchestrate DI services + ingestion/retrieval/agents |
-| `lib/repositories/` | Drizzle queries for `documents`, `analyses`, and `conversations` |
+| `lib/repositories/` | Drizzle queries for `documents`, `analyses`, `conversations` |
 | `lib/vectorstore/` | Pinecone client, upsert, query, delete |
 | `components/` | Client UI — never calls DB directly |
 
-## Postgres schema
-
-```
-documents:     fileId, userId, fileName, blobUrl, status, chunkCount, createdAt
-analyses:      id, userId, documents (json[]), result (json), traceUrl, createdAt
-conversations: id, userId, analysisId (fk→analyses), messages (json[]), updatedAt
-```
-
 ## What is not here
 
-- No `document_chunks` table, no `analysis_documents` junction
-- No `analyses.documentId` single FK, no `analyses.documentIds` array
+- No `document_chunks` table, no `analysis_documents` junction table
+- No `analyses.documentId` single FK, no `analyses.documentIds` uuid[] column
+- No REST list/get for analyses or documents (RSC + services instead)
 - No Cohere, no reranker, no hybrid/keyword search
 - No `lib/rag/` folder (replaced by `lib/ingestion/` and `lib/retrieval/`)
 - No criteria config loops, no philosophy nodes

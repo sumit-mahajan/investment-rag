@@ -38,3 +38,6 @@ next-env.d.ts
 
 # drizzle
 drizzle/
+
+# RAGAS CI generated report
+scripts/test-cases/golden/last-run.json

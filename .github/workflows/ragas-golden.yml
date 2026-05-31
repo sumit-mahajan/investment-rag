@@ -1,0 +1,56 @@
+name: Golden RAGAS CI
+
+on:
+  pull_request:
+    paths:
+      - "lib/agents/**"
+      - "lib/evaluation/**"
+      - "lib/retrieval/**"
+      - "scripts/evaluate-golden-ci.ts"
+      - "scripts/test-cases/golden/**"
+  push:
+    branches: [main]
+    paths:
+      - "lib/agents/**"
+      - "lib/evaluation/**"
+      - "lib/retrieval/**"
+      - "scripts/evaluate-golden-ci.ts"
+      - "scripts/test-cases/golden/**"
+  schedule:
+    # Weekly baseline check (SDE2 playbook Tier 2)
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+jobs:
+  golden-ragas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run golden RAGAS regression
+        env:
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          GOOGLE_GENAI_API_KEY: ${{ secrets.GOOGLE_GENAI_API_KEY }}
+        run: pnpm evaluate:golden
+
+      - name: Upload golden report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-ragas-report
+          path: scripts/test-cases/golden/last-run.json
+          retention-days: 30

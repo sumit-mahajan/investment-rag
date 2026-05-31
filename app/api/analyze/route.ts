@@ -7,7 +7,7 @@ import { handleError } from "@/lib/utils/errors";
 import { AnalysisRequestSchema } from "@/lib/utils/validation";
 
 export const runtime = "nodejs";
-/** LangGraph + Groq pipeline often exceeds 60s on Vercel */
+/** LangGraph + Gemini pipeline often exceeds 60s on Vercel */
 export const maxDuration = 300;
 
 export async function POST(req: NextRequest) {

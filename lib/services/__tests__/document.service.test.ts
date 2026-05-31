@@ -18,6 +18,7 @@ describe("DocumentService", () => {
   let service: DocumentService;
   let documentRepo: {
     create: ReturnType<typeof vi.fn>;
+    updateIngestResult: ReturnType<typeof vi.fn>;
     findByUserId: ReturnType<typeof vi.fn>;
     findByIdAndUserId: ReturnType<typeof vi.fn>;
     findByIdsAndUserId: ReturnType<typeof vi.fn>;
@@ -29,6 +30,7 @@ describe("DocumentService", () => {
     vi.clearAllMocks();
     documentRepo = {
       create: vi.fn().mockResolvedValue({}),
+      updateIngestResult: vi.fn().mockResolvedValue({}),
       findByUserId: vi.fn().mockResolvedValue([]),
       findByIdAndUserId: vi.fn(),
       findByIdsAndUserId: vi.fn().mockResolvedValue([]),
@@ -38,27 +40,101 @@ describe("DocumentService", () => {
     service = new DocumentService(documentRepo as unknown as DocumentRepository);
   });
 
-  describe("registerFile", () => {
-    it("returns fileId and completed status after ingestion", async () => {
-      const result = await service.registerFile("user-123", {
+  describe("startIngestion", () => {
+    it("creates a processing row and returns immediately", async () => {
+      const result = await service.startIngestion("user-123", {
         blobUrl: "https://blob.com/test.pdf",
         filename: "test.pdf",
-        fileBuffer: Buffer.from("test"),
       });
 
-      expect(result.fileId).toBeDefined();
-      expect(result.status).toBe("completed");
-      expect(result.chunkCount).toBe(10);
+      expect(result.status).toBe("processing");
       expect(result.fileName).toBe("test.pdf");
-      expect(ingestDocument).toHaveBeenCalled();
+      expect(result.fileId).toBeDefined();
+      expect(ingestDocument).not.toHaveBeenCalled();
       expect(documentRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
           userId: "user-123",
           fileName: "test.pdf",
-          status: "completed",
-          chunkCount: 10,
+          status: "processing",
+          chunkCount: 0,
         })
       );
+    });
+  });
+
+  describe("executeIngestion", () => {
+    it("ingests from blob and marks document completed", async () => {
+      documentRepo.findByIdAndUserId.mockResolvedValue({
+        fileId: "file-1",
+        fileName: "test.pdf",
+        blobUrl: "https://blob.com/test.pdf",
+        userId: "user-123",
+        status: "processing",
+        chunkCount: 0,
+      });
+
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: async () => new Uint8Array([1, 2, 3]).buffer,
+        })
+      );
+
+      await service.executeIngestion("file-1", "user-123");
+
+      expect(ingestDocument).toHaveBeenCalled();
+      expect(documentRepo.updateIngestResult).toHaveBeenCalledWith("file-1", "user-123", {
+        status: "completed",
+        chunkCount: 10,
+      });
+
+      vi.unstubAllGlobals();
+    });
+
+    it("marks document failed when ingestion throws", async () => {
+      documentRepo.findByIdAndUserId.mockResolvedValue({
+        fileId: "file-1",
+        fileName: "test.pdf",
+        blobUrl: "https://blob.com/test.pdf",
+        userId: "user-123",
+        status: "processing",
+        chunkCount: 0,
+      });
+
+      vi.mocked(ingestDocument).mockRejectedValueOnce(new Error("parse failed"));
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue({
+          ok: true,
+          arrayBuffer: async () => new Uint8Array([1]).buffer,
+        })
+      );
+
+      await service.executeIngestion("file-1", "user-123");
+
+      expect(deleteVectorsByFileId).toHaveBeenCalledWith("user-123", "file-1");
+      expect(documentRepo.updateIngestResult).toHaveBeenCalledWith("file-1", "user-123", {
+        status: "failed",
+        chunkCount: 0,
+      });
+
+      vi.unstubAllGlobals();
+    });
+
+    it("skips when document is not in processing state", async () => {
+      documentRepo.findByIdAndUserId.mockResolvedValue({
+        fileId: "file-1",
+        fileName: "test.pdf",
+        blobUrl: "https://blob.com/test.pdf",
+        userId: "user-123",
+        status: "completed",
+        chunkCount: 5,
+      });
+
+      await service.executeIngestion("file-1", "user-123");
+
+      expect(ingestDocument).not.toHaveBeenCalled();
     });
   });
 

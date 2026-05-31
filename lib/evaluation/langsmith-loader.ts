@@ -90,6 +90,10 @@ function buildAnswer(analysis: InvestmentAnalysis): string {
   const parts: string[] = [];
   if (analysis.verdict?.headline) parts.push(analysis.verdict.headline);
   if (analysis.verdict?.summary) parts.push(analysis.verdict.summary);
+  const metricsBlock = (analysis.keyMetrics ?? [])
+    .map((m) => `${m.label}: ${m.value ?? "NOT FOUND"}`)
+    .join("\n");
+  if (metricsBlock) parts.push(`Key financial metrics:\n${metricsBlock}`);
   parts.push(...(analysis.bullCase?.points ?? []));
   parts.push(...(analysis.bearCase?.points ?? []));
   parts.push(...(analysis.keyRisks?.points ?? []));
@@ -103,7 +107,7 @@ function extractContexts(state: AnalysisState): string[] {
   const fromMetrics = (state.extractedMetrics ?? [])
     .map((m) => m.context ?? m.sourceSnippet)
     .filter((c): c is string => Boolean(c));
-  return Array.from(new Set([...fromChunks, ...fromMetrics]));
+  return Array.from(new Set([...fromMetrics, ...fromChunks]));
 }
 
 function resolveAnalysis(outputs: AnalysisState, inputs: AnalysisState): InvestmentAnalysis | null {

@@ -81,7 +81,7 @@ const correctnessSchema = z.object({
  * 3. Calculate score as: supported_statements / total_statements
  */
 /** Max chars to prevent model overflow / malformed output */
-const MAX_CONTEXT_CHARS = 12000;
+const MAX_CONTEXT_CHARS = 24000;
 const MAX_ANSWER_CHARS = 3000;
 
 /** Sanitize string: trim, collapse newlines, limit length */

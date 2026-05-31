@@ -1,8 +1,8 @@
 # Known issues / deferred fixes
 
-## Analysis (Groq)
+## Analysis (Gemini)
 
-- **Rate limits:** Free-tier Groq TPD can block synthesis and metric extraction. Re-run analyses after quota resets.
+- **Rate limits:** Google AI free tier has generous quotas; sustained high volume may hit RPM limits. Re-run analyses after a short wait if needed.
 - **Metric quality:** Some runs still mis-label FCF/debt or show `0.0` placeholders; re-run after prompt/validation updates.
 - **Legacy analyses:** Rows created before `sourcesUsed` / verdict UI lack new fields until re-analyzed.
 

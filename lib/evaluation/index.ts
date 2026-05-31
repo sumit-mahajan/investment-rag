@@ -66,3 +66,12 @@ export {
   loadTestCasesFromDataset,
   type LangSmithLoaderOptions,
 } from './langsmith-loader';
+
+export {
+  GOLDEN_DATASET_PATH,
+  GOLDEN_REPORT_PATH,
+  GOLDEN_THRESHOLDS,
+  overallScore,
+  type GoldenTestCase,
+  type GoldenThresholds,
+} from './golden-config';

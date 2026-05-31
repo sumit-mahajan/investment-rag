@@ -12,7 +12,7 @@ alwaysApply: false
 __start__ → metricExtraction → qualitativeRetrieval → synthesis → citationAssembly → __end__
 ```
 
-Linear, no conditional edges. All nodes use Groq `llama-3.3-70b-versatile`.
+Linear, no conditional edges. LLM nodes use Gemini `gemini-2.5-flash`.
 
 ## State shape
 
@@ -68,7 +68,7 @@ return workflow.compile();
 
 ## Node contracts
 
-**metricExtraction** — one `retrieveChunks` call per metric label, structured Groq extraction per metric.
+**metricExtraction** — one `retrieveChunks` call per metric label, structured Gemini extraction per metric.
 - Input: `{ fileIds, userId }`
 - Output: `{ extractedMetrics: ExtractedMetric[] }`
 
@@ -76,7 +76,7 @@ return workflow.compile();
 - Input: `{ fileIds, userId, question }`
 - Output: `{ qualitativeChunks: RetrievedChunk[] }`
 
-**synthesis** — Groq structured output using Node 1 + Node 2 data only. No retrieval here.
+**synthesis** — Gemini structured output using Node 1 + Node 2 data only. No retrieval here.
 - Input: `{ extractedMetrics, qualitativeChunks }`
 - Output: `{ draftAnalysis: InvestmentAnalysis }`
 
@@ -84,7 +84,7 @@ return workflow.compile();
 - Input: `{ draftAnalysis, extractedMetrics, qualitativeChunks }`
 - Output: `{ finalAnalysis: InvestmentAnalysis }`
 
-## Groq output schema (synthesis node)
+## Gemini output schema (synthesis node)
 
 ```typescript
 const synthesisSchema = z.object({

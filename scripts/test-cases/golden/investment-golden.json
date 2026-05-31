@@ -1,0 +1,101 @@
+[
+  {
+    "id": "msft-cloud-fy24",
+    "label": "Microsoft Intelligent Cloud Q2 FY2024",
+    "question": "Provide a structured investment analysis of the uploaded financial documents: bull case, bear case, key financial metrics, and material risks.",
+    "answer": "Strong cloud momentum\n\nMicrosoft Intelligent Cloud revenue reached $25.9B in Q2 FY2024, up 20% YoY, with Azure and other cloud services up 30% in constant currency. Total company revenue was $62.0B (+18% YoY) and operating income was $27.0B (+33% YoY).\n\nBull case:\n- Intelligent Cloud revenue of $25.9B grew 20% YoY, led by Azure up 30% in constant currency.\n- Microsoft Cloud revenue reached $33.7B, up 24% YoY, with commercial bookings up 18%.\n\nBear case:\n- Cloud gross margin mix and AI infrastructure spend may pressure margins despite 71% Microsoft Cloud gross margin.\n\nKey risks:\n- Execution risk on AI platform investments and enterprise cloud migration pace.",
+    "sections": {
+      "metrics": "Intelligent Cloud revenue: $25.9B in Q2 FY2024 (+20% YoY). Azure and other cloud services: +30% constant currency. Total revenue: $62.0B (+18% YoY). Operating income: $27.0B (+33% YoY). Microsoft Cloud revenue: $33.7B (+24% YoY).",
+      "narrative": "Strong cloud momentum\n\nBull case:\n- Intelligent Cloud revenue of $25.9B grew 20% YoY, led by Azure up 30% in constant currency.\n- Microsoft Cloud revenue reached $33.7B, up 24% YoY, with commercial bookings up 18%.\n\nBear case:\n- Cloud gross margin mix and AI infrastructure spend may pressure margins despite 71% Microsoft Cloud gross margin.\n\nKey risks:\n- Execution risk on AI platform investments and enterprise cloud migration pace."
+    },
+    "contexts": [
+      "Microsoft Corp. reported Intelligent Cloud revenue of $25.9 billion in Q2 FY2024, representing a 20% increase year-over-year. This segment includes Azure, SQL Server, Windows Server, Enterprise Services, and other cloud offerings.",
+      "Azure and other cloud services revenue increased 30 percent in constant currency during the quarter. Microsoft Cloud revenue reached $33.7 billion, up 24% year-over-year.",
+      "The company's total revenue was $62.0 billion for the second quarter of fiscal year 2024, up 18% compared to the previous year. Operating income increased to $27.0 billion, up 33% year-over-year.",
+      "Commercial bookings increased 18% and Microsoft Cloud gross margin percentage increased year-over-year to 71%."
+    ],
+    "ground_truth": "Microsoft Intelligent Cloud revenue was $25.9B in Q2 FY2024, up 20% YoY; Azure grew 30% in constant currency; total revenue $62.0B (+18%)."
+  },
+  {
+    "id": "nvda-datacenter-q3fy24",
+    "label": "NVIDIA Data Center Q3 FY2024",
+    "question": "Provide a structured investment analysis of the uploaded financial documents: bull case, bear case, key financial metrics, and material risks.",
+    "answer": "AI infrastructure leader\n\nNVIDIA reported Q3 FY2024 revenue of $18.12B (+206% YoY). Data Center revenue was a record $14.51B (+279% YoY, +41% QoQ). Gross margin expanded to 75.0%.\n\nBull case:\n- Data Center revenue of $14.51B grew 279% YoY on Hopper GPU demand for generative AI workloads.\n- Gross margin expanded to 75.0% from 53.6% a year ago.\n\nBear case:\n- Customer concentration: cloud service providers represented roughly half of Data Center revenue.\n\nKey risks:\n- Cyclicality and export/regulatory constraints on advanced AI chips.",
+    "sections": {
+      "metrics": "Total revenue Q3 FY2024: $18.12B (+206% YoY). Data Center revenue: $14.51B (+279% YoY, +41% QoQ). Gross margin: 75.0% vs 53.6% prior year. Operating income: $10.42B.",
+      "narrative": "AI infrastructure leader\n\nBull case:\n- Data Center revenue of $14.51B grew 279% YoY on Hopper GPU demand for generative AI workloads.\n- Gross margin expanded to 75.0% from 53.6% a year ago.\n\nBear case:\n- Customer concentration: cloud service providers represented roughly half of Data Center revenue.\n\nKey risks:\n- Cyclicality and export/regulatory constraints on advanced AI chips."
+    },
+    "contexts": [
+      "NVIDIA today reported revenue for the third quarter ended October 29, 2023, of $18.12 billion, up 206% from a year ago. Data Center revenue was $14.51 billion, up 279% from a year ago and up 41% from the previous quarter.",
+      "The surge in Data Center revenue was driven by accelerating demand for the company's Hopper GPU computing platform for large language models, recommender systems and generative AI applications. Major cloud service providers represented roughly half of Data Center revenue.",
+      "The company's gross margin expanded to 75.0% in Q3 FY2024, compared to 53.6% a year ago. Operating expenses were $2.98 billion, and operating income reached $10.42 billion."
+    ],
+    "ground_truth": "NVIDIA Data Center revenue was $14.51B in Q3 FY2024, up 279% YoY and 41% sequentially, driven by Hopper GPU AI demand."
+  },
+  {
+    "id": "amzn-aws-q4-2023",
+    "label": "Amazon AWS Q4 2023",
+    "question": "Provide a structured investment analysis of the uploaded financial documents: bull case, bear case, key financial metrics, and material risks.",
+    "answer": "AWS growth stabilizing\n\nAWS net sales increased 13% YoY to $24.2B in Q4 2023. AWS operating income was $7.2B. Full-year 2023 AWS revenue was $90.8B with $24.6B operating income.\n\nBull case:\n- AWS revenue growth accelerated to 13% in Q4 from 12% in Q3 as new workloads offset optimization.\n- Generative AI is becoming an increasingly important driver of AWS growth.\n\nBear case:\n- Customers continued cloud spending optimization through 2023 before re-acceleration.\n\nKey risks:\n- Competitive pressure in cloud and AI infrastructure pricing.",
+    "sections": {
+      "metrics": "AWS Q4 2023 net sales: $24.2B (+13% YoY). AWS operating income Q4: $7.2B. Full-year 2023 AWS revenue: $90.8B; operating income $24.6B.",
+      "narrative": "AWS growth stabilizing\n\nBull case:\n- AWS revenue growth accelerated to 13% in Q4 from 12% in Q3 as new workloads offset optimization.\n- Generative AI is becoming an increasingly important driver of AWS growth.\n\nBear case:\n- Customers continued cloud spending optimization through 2023 before re-acceleration.\n\nKey risks:\n- Competitive pressure in cloud and AI infrastructure pricing."
+    },
+    "contexts": [
+      "Amazon Web Services net sales increased 13% year-over-year to $24.2 billion in Q4 2023. AWS operating income was $7.2 billion, compared to $5.2 billion in the fourth quarter of 2022.",
+      "AWS growth rate has been stabilizing after a period of optimization by customers in 2023. The 13% growth in Q4 represented an improvement from 12% in Q3 and 11% in Q2 of 2023.",
+      "Amazon CEO Andy Jassy noted that AWS customers continue to optimize their cloud spending but new workloads are beginning to accelerate. Generative AI is becoming an increasingly important driver of AWS growth.",
+      "For the full year 2023, AWS annual revenue was $90.8 billion with an operating income of $24.6 billion."
+    ],
+    "ground_truth": "AWS revenue grew 13% YoY to $24.2B in Q4 2023 with $7.2B operating income."
+  },
+  {
+    "id": "goog-ads-q4-2023",
+    "label": "Google Advertising Q4 2023",
+    "question": "Provide a structured investment analysis of the uploaded financial documents: bull case, bear case, key financial metrics, and material risks.",
+    "answer": "Advertising recovery\n\nGoogle advertising revenue in Q4 2023 was $65.5B (+11% YoY): Search and other $48.0B (+13%), YouTube ads $9.2B (+16%), Network ads $8.3B (-5%). Google Cloud revenue was $9.2B (+26%) with $864M operating income.\n\nBull case:\n- YouTube advertising grew 16% YoY to $9.2B.\n- Google Cloud reached profitability with $864M operating income vs $480M loss prior year.\n\nBear case:\n- Google Network advertising declined 5% YoY to $8.3B.\n\nKey risks:\n- Regulatory and antitrust pressure on Search and advertising practices.",
+    "sections": {
+      "metrics": "Google advertising Q4 2023: $65.5B (+11% YoY). Search and other: $48.0B (+13%). YouTube ads: $9.2B (+16%). Network ads: $8.3B (-5%). Google Cloud: $9.2B (+26%), operating income $864M.",
+      "narrative": "Advertising recovery\n\nBull case:\n- YouTube advertising grew 16% YoY to $9.2B.\n- Google Cloud reached profitability with $864M operating income vs $480M loss prior year.\n\nBear case:\n- Google Network advertising declined 5% YoY to $8.3B.\n\nKey risks:\n- Regulatory and antitrust pressure on Search and advertising practices."
+    },
+    "contexts": [
+      "Google advertising revenue in Q4 2023 was $65.5 billion, up 11% compared to the same quarter in 2022. Google Search and other advertising revenue was $48.0 billion, up 13% year-over-year.",
+      "YouTube advertising revenue was $9.2 billion, up 16% year-over-year. Google Network advertising revenue was $8.3 billion, down 5% year-over-year.",
+      "Google Cloud revenue reached $9.2 billion in Q4 2023, up 26% year-over-year. Google Cloud operating income turned positive at $864 million, compared to an operating loss of $480 million in Q4 2022."
+    ],
+    "ground_truth": "Google advertising revenue Q4 2023 was $65.5B (+11% YoY): Search $48.0B, YouTube $9.2B, Network $8.3B."
+  },
+  {
+    "id": "tsla-auto-margin-q4-2023",
+    "label": "Tesla Automotive Margin Q4 2023",
+    "question": "Provide a structured investment analysis of the uploaded financial documents: bull case, bear case, key financial metrics, and material risks.",
+    "answer": "Margin compression\n\nQ4 2023 automotive gross margin was 19.1% including $520M regulatory credits, or 17.6% excluding credits vs 24.3% ex-credits in Q4 2022. Automotive revenue was $21.6B; total revenue $25.2B (+3% YoY). Free cash flow was $4.4B in Q4.\n\nBull case:\n- Total deliveries reached ~1.81M vehicles in 2023, up 38% YoY.\n- Q4 free cash flow of $4.4B and $29.1B cash on hand support balance sheet flexibility.\n\nBear case:\n- Automotive gross margin ex-credits fell to 17.6% from 24.3% due to ASP reductions.\n\nKey risks:\n- Continued price competition and demand elasticity in EV market.",
+    "sections": {
+      "metrics": "Automotive gross margin Q4 2023: 19.1% with credits, 17.6% excluding $520M regulatory credits (vs 24.3% ex-credits Q4 2022). Automotive revenue $21.6B; total revenue $25.2B (+3% YoY). Q4 FCF $4.4B.",
+      "narrative": "Margin compression\n\nBull case:\n- Total deliveries reached ~1.81M vehicles in 2023, up 38% YoY.\n- Q4 free cash flow of $4.4B and $29.1B cash on hand support balance sheet flexibility.\n\nBear case:\n- Automotive gross margin ex-credits fell to 17.6% from 24.3% due to ASP reductions.\n\nKey risks:\n- Continued price competition and demand elasticity in EV market."
+    },
+    "contexts": [
+      "Q4 2023 automotive gross margin was 19.1%, including regulatory credit revenue of $520 million. Excluding regulatory credits, automotive gross margin was 17.6%, compared to 24.3% in Q4 2022 (excluding credits).",
+      "Tesla announced financial results for the fourth quarter and full year ended December 31, 2023. Automotive revenue was $21.6 billion in Q4, with total revenue reaching $25.2 billion, up 3% year-over-year.",
+      "The decline in automotive margins was attributed to reduced average selling prices due to price reductions throughout 2023, partially offset by lower costs per vehicle. Total deliveries in 2023 reached approximately 1.81 million vehicles, up 38% year-over-year.",
+      "Tesla ended 2023 with cash and cash equivalents of $29.1 billion. The company generated $4.4 billion in free cash flow during Q4 2023."
+    ],
+    "ground_truth": "Tesla Q4 2023 automotive gross margin 19.1% (17.6% ex-credits), down from prior year due to price cuts."
+  },
+  {
+    "id": "aapl-revenue-q1fy24",
+    "label": "Apple Revenue Q1 FY2024",
+    "question": "Provide a structured investment analysis of the uploaded financial documents: bull case, bear case, key financial metrics, and material risks.",
+    "answer": "Steady top-line growth\n\nApple posted Q1 FY2024 revenue of $119.6B (+2% YoY) and EPS of $2.18 (+16% YoY). iPhone revenue was $69.7B; Services reached a record $23.1B. Gross margin was 45.9%.\n\nBull case:\n- Services revenue record of $23.1B with improving gross margin of 45.9% vs 42.8% prior year.\n- iPhone revenue of $69.7B remains the primary revenue driver.\n\nBear case:\n- Total revenue growth slowed to 2% YoY despite EPS growth from margin expansion.\n\nKey risks:\n- Hardware cycle dependence and China/regulatory demand uncertainty.",
+    "sections": {
+      "metrics": "Q1 FY2024 revenue: $119.6B (+2% YoY). EPS: $2.18 (+16% YoY). iPhone revenue: $69.7B. Services: $23.1B record. Gross margin: 45.9% vs 42.8% prior year.",
+      "narrative": "Steady top-line growth\n\nBull case:\n- Services revenue record of $23.1B with improving gross margin of 45.9% vs 42.8% prior year.\n- iPhone revenue of $69.7B remains the primary revenue driver.\n\nBear case:\n- Total revenue growth slowed to 2% YoY despite EPS growth from margin expansion.\n\nKey risks:\n- Hardware cycle dependence and China/regulatory demand uncertainty."
+    },
+    "contexts": [
+      "Apple Inc. today announced financial results for its fiscal 2024 first quarter ended December 30, 2023. The Company posted quarterly revenue of $119.6 billion, up 2 percent year over year, and quarterly earnings per diluted share of $2.18, up 16 percent year over year.",
+      "iPhone revenue for Q1 FY2024 was $69.7 billion, representing the largest contributor to Apple's overall revenue. The Services category reached an all-time revenue record of $23.1 billion during the quarter.",
+      "The company's gross margin was 45.9 percent compared to 42.8 percent in the year-ago quarter. Operating margin improved to 33.0 percent compared to 30.3 percent in Q1 FY2023."
+    ],
+    "ground_truth": "Apple Q1 FY2024 revenue was $119.6B (+2% YoY); iPhone $69.7B; Services record $23.1B."
+  }
+]

@@ -130,6 +130,31 @@ export class DocumentRepository extends BaseRepository {
     });
   }
 
+  async updateIngestResult(
+    fileId: string,
+    userId: string,
+    data: { status: DocumentStatus; chunkCount: number },
+    tx?: Transaction
+  ): Promise<FileRecord> {
+    return this.execute("Update document ingest result", async () => {
+      const client = this.getClient(tx);
+      const [row] = await client
+        .update(documents)
+        .set({
+          status: data.status,
+          chunkCount: data.chunkCount,
+        })
+        .where(and(eq(documents.fileId, fileId), eq(documents.userId, userId)))
+        .returning();
+
+      if (!row) {
+        throw new NotFoundError("Document", fileId);
+      }
+
+      return this.toFileRecord(row);
+    });
+  }
+
   async delete(fileId: string, userId: string, tx?: Transaction): Promise<void> {
     return this.execute("Delete document", async () => {
       const client = this.getClient(tx);

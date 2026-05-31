@@ -88,7 +88,7 @@ export function DocumentUploader() {
         },
       });
 
-      updateFile({ status: "registering", progress: 85 });
+      updateFile({ status: "registering", progress: 90 });
 
       const registerRes = await fetch("/api/documents/register", {
         method: "POST",
@@ -99,14 +99,15 @@ export function DocumentUploader() {
       const registerData = (await registerRes.json()) as {
         error?: string;
         fileId?: string;
-        chunkCount?: number;
+        status?: string;
       };
 
       if (!registerRes.ok) {
-        throw new Error(registerData.error ?? "Failed to process document");
+        throw new Error(registerData.error ?? "Failed to queue document for indexing");
       }
 
       updateFile({ status: "done", progress: 100 });
+      router.refresh();
       return true;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Upload failed";
@@ -133,10 +134,11 @@ export function DocumentUploader() {
 
     if (successCount > 0) {
       const label = successCount === 1 ? "document" : "documents";
-      toast.success(`${successCount} ${label} indexed and ready for analysis`);
+      toast.success(
+        `${successCount} ${label} queued — indexing continues in the background (1–3 min)`
+      );
       setTimeout(() => {
         setFiles((prev) => prev.filter((f) => f.status !== "done"));
-        router.refresh();
       }, 800);
     }
   };
@@ -199,9 +201,7 @@ export function DocumentUploader() {
                         <span className="text-xs text-blue-600">{fileState.progress}%</span>
                       )}
                       {fileState.status === "registering" && (
-                        <span className="text-xs text-blue-600">
-                          Parsing &amp; indexing (1–3 min)…
-                        </span>
+                        <span className="text-xs text-blue-600">Queuing for indexing…</span>
                       )}
                       {fileState.status === "done" && (
                         <span className="text-xs text-emerald-600 flex items-center gap-1">
@@ -243,8 +243,8 @@ export function DocumentUploader() {
           {uploading && (
             <p className="text-xs sm:text-sm text-center text-slate-500">
               {files.some((f) => f.status === "registering")
-                ? "Parsing PDF with LlamaParse and indexing to Pinecone — please wait"
-                : "Uploading... please wait"}
+                ? "Queuing documents for background indexing…"
+                : "Uploading to storage…"}
             </p>
           )}
         </div>

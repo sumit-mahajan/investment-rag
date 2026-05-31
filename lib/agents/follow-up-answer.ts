@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { getGroqModel } from "./groq";
+import { getGeminiModel } from "./gemini";
 import { retrieveChunks } from "@/lib/retrieval";
 import type { ConversationMessage } from "@/lib/db/schema";
 import type { InvestmentAnalysis } from "@/lib/types/analysis";
@@ -47,7 +47,7 @@ export async function generateFollowUpAnswer(params: {
     ? `Score ${analysisResult.verdict.score}/100 (${analysisResult.verdict.recommendation}). ${analysisResult.verdict.summary}`
     : "See prior analysis in conversation.";
 
-  const model = getGroqModel().withStructuredOutput(followUpSchema);
+  const model = getGeminiModel().withStructuredOutput(followUpSchema);
   const result = await model.invoke(`You are a financial analyst answering a follow-up about documents already analyzed.
 
 Prior analysis summary: ${summary}

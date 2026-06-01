@@ -117,6 +117,7 @@ Using ONLY the metrics and passages below:
 
 Rules:
 - Do not invent figures. Every number in your output must appear verbatim in extracted metrics or document passages.
+- verdict.headline and verdict.summary: cite ONLY numbers that appear verbatim in the "## Extracted metrics" section above. Do not introduce any figure that is not there.
 - Do NOT cite current ratio, ROE/RONW, DSO, liquidity ratios, or other KPIs unless that exact figure appears in the passages below.
 - If Net Income/EPS, Operating Margin, or Free Cash Flow are NOT FOUND, do not imply profitability or cash generation; state the gap in summary and bear case.
 - If revenue YoY is NOT FOUND, say so in summary and lower the score accordingly.

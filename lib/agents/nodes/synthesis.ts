@@ -120,7 +120,8 @@ Rules:
 - Do NOT cite current ratio, ROE/RONW, DSO, liquidity ratios, or other KPIs unless that exact figure appears in the passages below.
 - If Net Income/EPS, Operating Margin, or Free Cash Flow are NOT FOUND, do not imply profitability or cash generation; state the gap in summary and bear case.
 - If revenue YoY is NOT FOUND, say so in summary and lower the score accordingly.
-- Directly address the question: cover bull case, bear case, key financial metrics (refer to the extracted metrics list), and material risks.
+- Directly address the question: structure the memo as (1) verdict summary, (2) key financial metrics, (3) bull case, (4) bear case, (5) material risks.
+- Bear case and material risks must use risk-factor language from passages or NOT FOUND metric gaps — do not cite segment/product revenue breakdowns unless that exact figure is in the passages.
 - Prefer factual statements from the filing over analyst interpretation. Do not add "why it matters" unless the passage supports it.
 - Do not repeat the same metric string as both bull and bear without a filing-based reason.
 - Max ${bullMax} bull, ${bearMax} bear, ${risksMax} risk bullets. Each under 220 characters.

@@ -16,6 +16,7 @@ export const METRIC_DEFINITIONS = [
     supplementalQueries: [
       "net income year ended December 31 2023 2022 in millions except per share",
       "profit after tax net profit year ended March 31 INR crore million consolidated",
+      "statement of profit and loss profit for the year attributable shareholders EPS basic diluted",
       "earnings per share basic diluted Class A Class B",
     ],
   },
@@ -26,6 +27,7 @@ export const METRIC_DEFINITIONS = [
     supplementalQueries: [
       "consolidated statements of income operating income revenue costs and expenses percent",
       "income from operations as percent of revenue",
+      "EBITDA operating profit margin year ended March 31 INR crore percent of revenue",
     ],
   },
   {
@@ -34,6 +36,8 @@ export const METRIC_DEFINITIONS = [
     supplementalQueries: [
       "net cash provided by operating activities purchases of property equipment free cash flow reconciliation",
       "cash flows statement investing activities capital expenditures",
+      "cash flow from operating activities capital expenditure year ended March 31 INR crore",
+      "free cash flow reconciliation net cash generated operating activities",
     ],
   },
   {

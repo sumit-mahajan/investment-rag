@@ -6,6 +6,7 @@ import { neon } from "@neondatabase/serverless";
 import { analyses } from "@/lib/db/schema";
 import { eq, inArray } from "drizzle-orm";
 import { evaluateBatch } from "@/lib/evaluation";
+import { buildAnalysisAnswerForEval } from "@/lib/evaluation/build-analysis-answer";
 import type { EvaluationInput } from "@/lib/types/evaluation";
 import type { InvestmentAnalysis } from "@/lib/types/analysis";
 
@@ -39,17 +40,7 @@ async function readRunWithRetry(client: Client, runId: string) {
 }
 
 function buildAnswer(analysis: InvestmentAnalysis): string {
-  const parts: string[] = [];
-  if (analysis.verdict?.headline) parts.push(analysis.verdict.headline);
-  if (analysis.verdict?.summary) parts.push(analysis.verdict.summary);
-  const metricsBlock = (analysis.keyMetrics ?? [])
-    .map((m) => `${m.label}: ${m.value ?? "NOT FOUND"}`)
-    .join("\n");
-  if (metricsBlock) parts.push(`Key financial metrics:\n${metricsBlock}`);
-  parts.push(...(analysis.bullCase?.points ?? []));
-  parts.push(...(analysis.bearCase?.points ?? []));
-  parts.push(...(analysis.keyRisks?.points ?? []));
-  return parts.filter(Boolean).join("\n");
+  return buildAnalysisAnswerForEval(analysis);
 }
 
 function extractContexts(state: AnalysisState): string[] {

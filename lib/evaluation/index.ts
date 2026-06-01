@@ -67,6 +67,8 @@ export {
   type LangSmithLoaderOptions,
 } from './langsmith-loader';
 
+export { buildAnalysisAnswerForEval } from './build-analysis-answer';
+
 export {
   GOLDEN_DATASET_PATH,
   GOLDEN_REPORT_PATH,

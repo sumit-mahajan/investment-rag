@@ -1,6 +1,19 @@
 import type { AnalysisState } from "../financial-analyzer";
+import { filterBullPoints, filterGroundedPoints } from "../claim-filter";
 import { chunkToCitation } from "@/lib/retrieval";
 import type { InvestmentAnalysis } from "@/lib/types/analysis";
+
+function buildEvidenceCorpus(state: AnalysisState): string {
+  const parts: string[] = [];
+  for (const m of state.extractedMetrics) {
+    if (m.value) parts.push(m.value);
+    for (const c of m.chunks) parts.push(c.content);
+  }
+  for (const c of state.qualitativeChunks) {
+    parts.push(c.content);
+  }
+  return parts.join("\n");
+}
 
 export async function citationAssemblyNode(
   state: AnalysisState
@@ -10,14 +23,19 @@ export async function citationAssemblyNode(
     throw new Error("citationAssembly requires draftAnalysis from synthesis");
   }
 
+  const corpus = buildEvidenceCorpus(state);
+  const metricValues = state.extractedMetrics
+    .map((m) => m.value)
+    .filter((v): v is string => Boolean(v));
+
   const finalAnalysis: InvestmentAnalysis = {
     ...draft,
     bullCase: {
-      points: draft.bullCase.points,
+      points: filterBullPoints(draft.bullCase.points, metricValues, corpus),
       citations: [],
     },
     bearCase: {
-      points: draft.bearCase.points,
+      points: filterGroundedPoints(draft.bearCase.points, corpus),
       citations: [],
     },
     keyMetrics: draft.keyMetrics.map((metric) => {
@@ -31,7 +49,7 @@ export async function citationAssemblyNode(
       };
     }),
     keyRisks: {
-      points: draft.keyRisks.points,
+      points: filterGroundedPoints(draft.keyRisks.points, corpus),
       citations: [],
     },
   };

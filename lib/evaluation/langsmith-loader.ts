@@ -18,6 +18,7 @@ import { Client } from "langsmith";
 import type { Run } from "langsmith";
 import type { EvaluationInput } from "@/lib/types/evaluation";
 import type { InvestmentAnalysis } from "@/lib/types/analysis";
+import { buildAnalysisAnswerForEval } from "@/lib/evaluation/build-analysis-answer";
 
 export interface LangSmithLoaderOptions {
   /** LangSmith project name (default: LANGCHAIN_PROJECT env) */
@@ -78,7 +79,11 @@ interface AnalysisState {
   fileIds?: string[];
   userId?: string;
   question?: string;
-  extractedMetrics?: Array<{ context?: string; sourceSnippet?: string }>;
+  extractedMetrics?: Array<{
+    context?: string;
+    sourceSnippet?: string;
+    chunks?: Array<{ content?: string }>;
+  }>;
   qualitativeChunks?: Array<{ content?: string }>;
   draftAnalysis?: InvestmentAnalysis | null;
   finalAnalysis?: InvestmentAnalysis | null;
@@ -87,17 +92,7 @@ interface AnalysisState {
 }
 
 function buildAnswer(analysis: InvestmentAnalysis): string {
-  const parts: string[] = [];
-  if (analysis.verdict?.headline) parts.push(analysis.verdict.headline);
-  if (analysis.verdict?.summary) parts.push(analysis.verdict.summary);
-  const metricsBlock = (analysis.keyMetrics ?? [])
-    .map((m) => `${m.label}: ${m.value ?? "NOT FOUND"}`)
-    .join("\n");
-  if (metricsBlock) parts.push(`Key financial metrics:\n${metricsBlock}`);
-  parts.push(...(analysis.bullCase?.points ?? []));
-  parts.push(...(analysis.bearCase?.points ?? []));
-  parts.push(...(analysis.keyRisks?.points ?? []));
-  return parts.filter(Boolean).join("\n");
+  return buildAnalysisAnswerForEval(analysis);
 }
 
 function extractContexts(state: AnalysisState): string[] {
@@ -105,8 +100,14 @@ function extractContexts(state: AnalysisState): string[] {
     .map((c) => c.content)
     .filter((c): c is string => Boolean(c));
   const fromMetrics = (state.extractedMetrics ?? [])
-    .map((m) => m.context ?? m.sourceSnippet)
-    .filter((c): c is string => Boolean(c));
+    .flatMap((m) => {
+      if (m.chunks?.length) {
+        return m.chunks
+          .map((c) => c.content)
+          .filter((c): c is string => Boolean(c));
+      }
+      return [m.context, m.sourceSnippet].filter((c): c is string => Boolean(c));
+    });
   return Array.from(new Set([...fromMetrics, ...fromChunks]));
 }
 

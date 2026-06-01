@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import "dotenv/config";
 import { Client } from "langsmith";
-import { drizzle } from "drizzle-orm/neon-http";
-import { neon } from "@neondatabase/serverless";
+import { db } from "@/lib/db/client";
 import { analyses } from "@/lib/db/schema";
-import { eq, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { evaluateBatch } from "@/lib/evaluation";
 import { buildAnalysisAnswerForEval } from "@/lib/evaluation/build-analysis-answer";
 import type { EvaluationInput } from "@/lib/types/evaluation";
@@ -90,7 +89,6 @@ async function main() {
     process.exit(1);
   }
 
-  const db = drizzle(neon(process.env.POSTGRES_URL!));
   const client = new Client();
   const rows = await db.select().from(analyses).where(inArray(analyses.id, ids));
 

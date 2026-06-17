@@ -11,6 +11,7 @@ import { formatDate } from "@/lib/utils";
 import { DocumentUploader } from "@/components/documents/document-uploader";
 import { DocumentList } from "@/components/documents/document-list";
 import { DocumentIngestPoller } from "@/components/documents/document-ingest-poller";
+import { GlobalSearchPanel } from "@/components/documents/global-search-panel";
 import type { DocumentListItem } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +59,7 @@ export default async function DashboardPage() {
           </div>
 
           <DocumentUploader />
+          <GlobalSearchPanel />
           {hasProcessingDocuments && <DocumentIngestPoller />}
 
           <div className="space-y-3 sm:space-y-4">

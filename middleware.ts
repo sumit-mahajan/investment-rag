@@ -6,6 +6,8 @@ const isPublicRoute = createRouteMatcher([
   "/sign-up(.*)",
   "/api/webhooks(.*)",
   "/api/documents/upload(.*)",
+  "/api/documents(.*)",
+  "/api/admin(.*)",
   // Metadata routes have no file extension, so they must be public explicitly.
   "/icon(.*)",
   "/apple-icon(.*)",
